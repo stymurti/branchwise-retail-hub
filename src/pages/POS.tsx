@@ -80,16 +80,31 @@ export default function POS() {
     }).filter((item) => item.quantity > 0));
   };
   
+  const MAX_QTY_PER_ITEM = 999;
   const setQuantity = (id: string, qty: number) => {
-    const stock = getProductStock(id);
-    if (qty <= 0) {
+    // Strict validation: must be a finite, safe integer
+    if (!Number.isFinite(qty) || Number.isNaN(qty)) {
+      toast.error("Jumlah tidak valid");
+      return;
+    }
+    // Coerce to integer, clamp to safe bounds
+    const safeQty = Math.floor(qty);
+    if (safeQty <= 0) {
       setCart((prev) => prev.filter((item) => item.id !== id));
-    } else if (qty > stock) {
+      return;
+    }
+    if (safeQty > MAX_QTY_PER_ITEM) {
+      toast.error(`Maksimal ${MAX_QTY_PER_ITEM} unit per item`);
+      setCart((prev) => prev.map((item) => item.id === id ? { ...item, quantity: MAX_QTY_PER_ITEM } : item));
+      return;
+    }
+    const stock = getProductStock(id);
+    if (safeQty > stock) {
       toast.error(`Stok tersedia hanya ${stock} unit`);
       setCart((prev) => prev.map((item) => item.id === id ? { ...item, quantity: stock } : item));
-    } else {
-      setCart((prev) => prev.map((item) => item.id === id ? { ...item, quantity: qty } : item));
+      return;
     }
+    setCart((prev) => prev.map((item) => item.id === id ? { ...item, quantity: safeQty } : item));
   };
 
   const removeFromCart = (id: string) => setCart((prev) => prev.filter((item) => item.id !== id));
