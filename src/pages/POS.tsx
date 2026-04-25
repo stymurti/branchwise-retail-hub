@@ -80,16 +80,31 @@ export default function POS() {
     }).filter((item) => item.quantity > 0));
   };
   
+  const MAX_QTY_PER_ITEM = 999;
   const setQuantity = (id: string, qty: number) => {
-    const stock = getProductStock(id);
-    if (qty <= 0) {
+    // Strict validation: must be a finite, safe integer
+    if (!Number.isFinite(qty) || Number.isNaN(qty)) {
+      toast.error("Jumlah tidak valid");
+      return;
+    }
+    // Coerce to integer, clamp to safe bounds
+    const safeQty = Math.floor(qty);
+    if (safeQty <= 0) {
       setCart((prev) => prev.filter((item) => item.id !== id));
-    } else if (qty > stock) {
+      return;
+    }
+    if (safeQty > MAX_QTY_PER_ITEM) {
+      toast.error(`Maksimal ${MAX_QTY_PER_ITEM} unit per item`);
+      setCart((prev) => prev.map((item) => item.id === id ? { ...item, quantity: MAX_QTY_PER_ITEM } : item));
+      return;
+    }
+    const stock = getProductStock(id);
+    if (safeQty > stock) {
       toast.error(`Stok tersedia hanya ${stock} unit`);
       setCart((prev) => prev.map((item) => item.id === id ? { ...item, quantity: stock } : item));
-    } else {
-      setCart((prev) => prev.map((item) => item.id === id ? { ...item, quantity: qty } : item));
+      return;
     }
+    setCart((prev) => prev.map((item) => item.id === id ? { ...item, quantity: safeQty } : item));
   };
 
   const removeFromCart = (id: string) => setCart((prev) => prev.filter((item) => item.id !== id));
@@ -215,9 +230,25 @@ export default function POS() {
                   <Button variant="outline" size="iconSm" onClick={() => updateQuantity(item.id, -1)}><Minus className="w-3 h-3" /></Button>
                   <Input
                     type="number"
-                    min="1"
+                    min={1}
+                    max={999}
+                    step={1}
+                    inputMode="numeric"
                     value={item.quantity}
-                    onChange={(e) => setQuantity(item.id, parseInt(e.target.value) || 0)}
+                    onChange={(e) => {
+                      const raw = e.target.value;
+                      // Allow empty during typing without crashing
+                      if (raw === "") return;
+                      const parsed = Number.parseInt(raw, 10);
+                      if (Number.isNaN(parsed)) return;
+                      setQuantity(item.id, parsed);
+                    }}
+                    onBlur={(e) => {
+                      const parsed = Number.parseInt(e.target.value, 10);
+                      if (!Number.isFinite(parsed) || parsed <= 0) {
+                        setQuantity(item.id, 1);
+                      }
+                    }}
                     className="w-12 md:w-14 text-center font-medium text-sm h-8 px-1"
                   />
                   <Button variant="outline" size="iconSm" onClick={() => updateQuantity(item.id, 1)}><Plus className="w-3 h-3" /></Button>
