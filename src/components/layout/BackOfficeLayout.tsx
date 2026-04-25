@@ -25,6 +25,7 @@ import {
   Moon,
   Sun,
   Warehouse,
+  Truck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/hooks/use-theme";
@@ -60,6 +61,7 @@ const navItems: NavItem[] = [
       { title: "Purchase Order", path: "/backoffice/inventory/po", icon: FileText },
     ],
   },
+  { title: "Vendor", icon: Truck, path: "/backoffice/vendors" },
   {
     title: "Keuangan",
     icon: CreditCard,

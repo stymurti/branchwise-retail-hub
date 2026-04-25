@@ -14,6 +14,7 @@ import Employees from "./pages/Employees";
 import EmployeeReports from "./pages/EmployeeReports";
 import Reports from "./pages/Reports";
 import Settings from "./pages/Settings";
+import Vendors from "./pages/Vendors";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -43,6 +44,7 @@ const App = () => (
             <Route path="/backoffice/inventory/stock-in" element={<Inventory />} />
             <Route path="/backoffice/inventory/opname" element={<Inventory />} />
             <Route path="/backoffice/inventory/po" element={<Inventory />} />
+            <Route path="/backoffice/vendors" element={<Vendors />} />
             <Route path="/backoffice/finance/journal" element={<Reports />} />
             <Route path="/backoffice/finance/ap-ar" element={<Reports />} />
             <Route path="/backoffice/finance/cashflow" element={<Reports />} />
