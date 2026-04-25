@@ -230,9 +230,25 @@ export default function POS() {
                   <Button variant="outline" size="iconSm" onClick={() => updateQuantity(item.id, -1)}><Minus className="w-3 h-3" /></Button>
                   <Input
                     type="number"
-                    min="1"
+                    min={1}
+                    max={999}
+                    step={1}
+                    inputMode="numeric"
                     value={item.quantity}
-                    onChange={(e) => setQuantity(item.id, parseInt(e.target.value) || 0)}
+                    onChange={(e) => {
+                      const raw = e.target.value;
+                      // Allow empty during typing without crashing
+                      if (raw === "") return;
+                      const parsed = Number.parseInt(raw, 10);
+                      if (Number.isNaN(parsed)) return;
+                      setQuantity(item.id, parsed);
+                    }}
+                    onBlur={(e) => {
+                      const parsed = Number.parseInt(e.target.value, 10);
+                      if (!Number.isFinite(parsed) || parsed <= 0) {
+                        setQuantity(item.id, 1);
+                      }
+                    }}
                     className="w-12 md:w-14 text-center font-medium text-sm h-8 px-1"
                   />
                   <Button variant="outline" size="iconSm" onClick={() => updateQuantity(item.id, 1)}><Plus className="w-3 h-3" /></Button>
