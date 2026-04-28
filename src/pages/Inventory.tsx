@@ -644,6 +644,10 @@ export default function Inventory() {
                                 <ArrowLeftRight className="w-4 h-4 mr-2" />
                                 Transfer Stok
                               </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => setBatchProduct(product)}>
+                                <Calendar className="w-4 h-4 mr-2" />
+                                Kelola Batch & Expired
+                              </DropdownMenuItem>
                               <DropdownMenuItem className="text-destructive">
                                 <Trash2 className="w-4 h-4 mr-2" />
                                 Hapus
