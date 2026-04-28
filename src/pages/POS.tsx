@@ -208,6 +208,9 @@ export default function POS() {
               {filteredProducts.map((product) => {
                 const isLowStock = product.stock < product.minStock;
                 const isOutOfStock = product.stock <= 0;
+                const nextBatch = getNextExpiringBatch(product.batches, STORE_LOCATION);
+                const expStatus = nextBatch ? getExpiryStatus(nextBatch.expiredDate) : null;
+                const isNearExpiry = expStatus && expStatus.days <= 30;
                 return (
                   <button 
                     key={product.id} 
@@ -232,6 +235,17 @@ export default function POS() {
                     </div>
                     <h4 className={`font-medium text-xs md:text-sm line-clamp-2 ${!isOutOfStock && 'group-hover:text-primary'}`}>{product.name}</h4>
                     <p className="text-xs text-muted-foreground mt-1">{product.sku}</p>
+                    {nextBatch && expStatus && !isOutOfStock && (
+                      <div className={`flex items-center gap-1 mt-1 text-xs ${
+                        expStatus.variant === "destructive" ? "text-destructive" :
+                        expStatus.variant === "warning" ? "text-warning" : "text-muted-foreground"
+                      }`}>
+                        <Calendar className="w-3 h-3" />
+                        <span className="truncate">
+                          {expStatus.days < 0 ? "EXPIRED" : `Exp ${expStatus.days}d (FIFO)`}
+                        </span>
+                      </div>
+                    )}
                     <div className="flex items-center justify-between mt-2">
                       <span className="font-bold text-primary text-xs md:text-sm">{formatCurrency(product.price)}</span>
                       <Badge variant={isOutOfStock ? "destructive" : isLowStock ? "destructive" : "secondary"} className="text-xs">
