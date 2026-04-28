@@ -729,6 +729,17 @@ export default function Inventory() {
         products={products}
         onSubmit={handlePO}
       />
+
+      {batchProduct && (
+        <BatchManagerModal
+          open={!!batchProduct}
+          onOpenChange={(o) => !o && setBatchProduct(null)}
+          productName={batchProduct.name}
+          productSku={batchProduct.sku}
+          batches={batchProduct.batches}
+          onAddBatch={(batch) => handleAddBatch(batchProduct.id, batch)}
+        />
+      )}
     </BackOfficeLayout>
   );
 }
