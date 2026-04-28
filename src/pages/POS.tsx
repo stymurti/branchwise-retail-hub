@@ -57,6 +57,7 @@ export default function POS() {
   const [shiftData, setShiftData] = useState<any>(null);
   const [transactions, setTransactions] = useState<any[]>([]);
   const [showLowStock, setShowLowStock] = useState(true);
+  const [products, setProducts] = useState(initialProducts);
 
   const lowStockProducts = products.filter((p) => p.stock < p.minStock);
 
