@@ -7,6 +7,7 @@ import { ThemeProvider } from "@/hooks/use-theme";
 import ModeSelect from "./pages/ModeSelect";
 import POS from "./pages/POS";
 import POSTransactions from "./pages/POSTransactions";
+import POSSettings from "./pages/POSSettings";
 import Dashboard from "./pages/Dashboard";
 import Branches from "./pages/Branches";
 import Inventory from "./pages/Inventory";
@@ -35,6 +36,7 @@ const App = () => (
             <Route path="/pos" element={<POS />} />
             <Route path="/pos/transactions" element={<POSTransactions />} />
             <Route path="/pos/shifts" element={<POS />} />
+            <Route path="/pos/settings" element={<POSSettings />} />
 
             {/* Back Office Routes */}
             <Route path="/backoffice" element={<Dashboard />} />
