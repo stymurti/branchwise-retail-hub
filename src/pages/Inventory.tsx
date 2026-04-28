@@ -47,6 +47,9 @@ import { AddProductModal } from "@/components/inventory/AddProductModal";
 import { StockTransferModal } from "@/components/inventory/StockTransferModal";
 import { StockOpnameModal } from "@/components/inventory/StockOpnameModal";
 import { PurchaseOrderModal } from "@/components/inventory/PurchaseOrderModal";
+import { BatchManagerModal } from "@/components/inventory/BatchManagerModal";
+import { StockBatch, getNextExpiringBatch, getExpiryStatus, generateBatchId } from "@/lib/fifo";
+import { Calendar } from "lucide-react";
 import { toast } from "sonner";
 
 interface Product {
@@ -61,9 +64,26 @@ interface Product {
   branches: Record<string, number>;
   lastRestock: string;
   supplier: string;
+  batches: StockBatch[];
 }
 
-const initialProducts: Product[] = [
+// Helper to seed initial batches from branch stock distribution
+function seedBatches(sku: string, branches: Record<string, number>, monthsToExpire = 6): StockBatch[] {
+  const today = new Date();
+  const exp = new Date(today.getFullYear(), today.getMonth() + monthsToExpire, today.getDate());
+  return Object.entries(branches)
+    .filter(([_, qty]) => qty > 0)
+    .map(([loc, qty], i) => ({
+      id: `BATCH-${sku}-INIT-${i}`,
+      quantity: qty,
+      expiredDate: exp.toISOString().split("T")[0],
+      receivedDate: today.toISOString().split("T")[0],
+      location: loc,
+      batchNumber: `LOT-INIT-${i + 1}`,
+    }));
+}
+
+const initialProductsRaw = [
   {
     id: 1,
     sku: "PRD-001",
@@ -76,6 +96,7 @@ const initialProducts: Product[] = [
     branches: { pusat: 300, jakarta: 450, surabaya: 250, bandung: 150, medan: 100 },
     lastRestock: "2024-01-10",
     supplier: "PT Indofood",
+    expireMonths: 8,
   },
   {
     id: 2,
@@ -89,6 +110,7 @@ const initialProducts: Product[] = [
     branches: { pusat: 10, jakarta: 15, surabaya: 10, bandung: 5, medan: 5 },
     lastRestock: "2024-01-08",
     supplier: "PT Ultra Jaya",
+    expireMonths: 1,
   },
   {
     id: 3,
@@ -102,6 +124,7 @@ const initialProducts: Product[] = [
     branches: { pusat: 800, jakarta: 700, surabaya: 600, bandung: 400, medan: 300 },
     lastRestock: "2024-01-12",
     supplier: "PT Danone",
+    expireMonths: 24,
   },
   {
     id: 4,
@@ -115,6 +138,7 @@ const initialProducts: Product[] = [
     branches: { pusat: 5, jakarta: 3, surabaya: 2, bandung: 1, medan: 1 },
     lastRestock: "2024-01-11",
     supplier: "PT Nippon Indosari",
+    expireMonths: 0,
   },
   {
     id: 5,
@@ -128,6 +152,7 @@ const initialProducts: Product[] = [
     branches: { pusat: 200, jakarta: 180, surabaya: 150, bandung: 80, medan: 70 },
     lastRestock: "2024-01-09",
     supplier: "PT Unilever",
+    expireMonths: 36,
   },
   {
     id: 6,
@@ -141,8 +166,14 @@ const initialProducts: Product[] = [
     branches: { pusat: 1000, jakarta: 800, surabaya: 700, bandung: 400, medan: 300 },
     lastRestock: "2024-01-10",
     supplier: "PT Santos Jaya",
+    expireMonths: 18,
   },
 ];
+
+const initialProducts: Product[] = initialProductsRaw.map(({ expireMonths, ...p }) => ({
+  ...p,
+  batches: seedBatches(p.sku, p.branches, expireMonths || 6),
+}));
 
 const categories = ["Semua", "Makanan", "Minuman", "Personal Care", "Snack"];
 
@@ -175,6 +206,18 @@ export default function Inventory() {
   const [isTransferOpen, setIsTransferOpen] = useState(false);
   const [isOpnameOpen, setIsOpnameOpen] = useState(false);
   const [isPOOpen, setIsPOOpen] = useState(false);
+  const [batchProduct, setBatchProduct] = useState<Product | null>(null);
+
+  const handleAddBatch = (productId: number, batch: StockBatch) => {
+    setProducts((prev) => prev.map((p) => {
+      if (p.id !== productId) return p;
+      const newBatches = [...p.batches, batch];
+      const newBranches = { ...p.branches, [batch.location]: (p.branches[batch.location] || 0) + batch.quantity };
+      const newStock = Object.values(newBranches).reduce((s, v) => s + v, 0);
+      return { ...p, batches: newBatches, branches: newBranches, stock: newStock, lastRestock: batch.receivedDate };
+    }));
+    setBatchProduct((bp) => bp && bp.id === productId ? { ...bp, batches: [...bp.batches, batch] } : bp);
+  };
 
   // Determine active tab based on route
   const getActiveTab = () => {
@@ -220,6 +263,7 @@ export default function Inventory() {
         branches: { pusat: p.stock },
         lastRestock: new Date().toISOString().split("T")[0],
         supplier: p.supplier,
+        batches: seedBatches(p.sku, { pusat: p.stock }, 6),
       };
     });
 
@@ -250,6 +294,7 @@ export default function Inventory() {
       id: Date.now(),
       ...newProduct,
       lastRestock: new Date().toISOString().split("T")[0],
+      batches: seedBatches(newProduct.sku, newProduct.branches, 6),
     };
     setProducts([...products, product]);
   };
@@ -493,6 +538,7 @@ export default function Inventory() {
                       <TableHead className="text-center">Stok Lokasi</TableHead>
                     )}
                     <TableHead>Supplier</TableHead>
+                    <TableHead className="text-center">Exp. Terdekat</TableHead>
                     <TableHead className="text-center">Status</TableHead>
                     <TableHead className="w-12"></TableHead>
                   </TableRow>
@@ -502,7 +548,9 @@ export default function Inventory() {
                     const isLowStock = product.stock <= product.minStock;
                     const margin = ((product.price - product.cost) / product.price) * 100;
                     const locationStock = selectedLocation !== "all" ? (product.branches[selectedLocation] || 0) : null;
-                    
+                    const nextBatch = getNextExpiringBatch(product.batches, selectedLocation !== "all" ? selectedLocation : undefined);
+                    const expStatus = nextBatch ? getExpiryStatus(nextBatch.expiredDate) : null;
+
                     return (
                       <TableRow key={product.id} className="group">
                         <TableCell>
@@ -545,6 +593,26 @@ export default function Inventory() {
                           <p className="text-sm">{product.supplier}</p>
                         </TableCell>
                         <TableCell className="text-center">
+                          {nextBatch && expStatus ? (
+                            <div className="flex flex-col items-center gap-0.5">
+                              <span className="text-xs font-medium">{nextBatch.expiredDate}</span>
+                              <Badge
+                                className={
+                                  expStatus.variant === "destructive"
+                                    ? "bg-destructive/20 text-destructive text-xs"
+                                    : expStatus.variant === "warning"
+                                      ? "bg-warning/20 text-warning text-xs"
+                                      : "bg-success/20 text-success text-xs"
+                                }
+                              >
+                                {expStatus.days < 0 ? "Expired" : `${expStatus.days}d`}
+                              </Badge>
+                            </div>
+                          ) : (
+                            <span className="text-xs text-muted-foreground">-</span>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-center">
                           <Badge
                             variant={isLowStock ? "destructive" : "default"}
                             className={
@@ -575,6 +643,10 @@ export default function Inventory() {
                               <DropdownMenuItem onClick={() => setIsTransferOpen(true)}>
                                 <ArrowLeftRight className="w-4 h-4 mr-2" />
                                 Transfer Stok
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => setBatchProduct(product)}>
+                                <Calendar className="w-4 h-4 mr-2" />
+                                Kelola Batch & Expired
                               </DropdownMenuItem>
                               <DropdownMenuItem className="text-destructive">
                                 <Trash2 className="w-4 h-4 mr-2" />
@@ -657,6 +729,17 @@ export default function Inventory() {
         products={products}
         onSubmit={handlePO}
       />
+
+      {batchProduct && (
+        <BatchManagerModal
+          open={!!batchProduct}
+          onOpenChange={(o) => !o && setBatchProduct(null)}
+          productName={batchProduct.name}
+          productSku={batchProduct.sku}
+          batches={batchProduct.batches}
+          onAddBatch={(batch) => handleAddBatch(batchProduct.id, batch)}
+        />
+      )}
     </BackOfficeLayout>
   );
 }
