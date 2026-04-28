@@ -548,7 +548,9 @@ export default function Inventory() {
                     const isLowStock = product.stock <= product.minStock;
                     const margin = ((product.price - product.cost) / product.price) * 100;
                     const locationStock = selectedLocation !== "all" ? (product.branches[selectedLocation] || 0) : null;
-                    
+                    const nextBatch = getNextExpiringBatch(product.batches, selectedLocation !== "all" ? selectedLocation : undefined);
+                    const expStatus = nextBatch ? getExpiryStatus(nextBatch.expiredDate) : null;
+
                     return (
                       <TableRow key={product.id} className="group">
                         <TableCell>
