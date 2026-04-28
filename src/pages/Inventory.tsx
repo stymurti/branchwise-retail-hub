@@ -83,7 +83,7 @@ function seedBatches(sku: string, branches: Record<string, number>, monthsToExpi
     }));
 }
 
-const initialProducts: Product[] = [
+const initialProductsRaw = [
   {
     id: 1,
     sku: "PRD-001",
@@ -96,6 +96,7 @@ const initialProducts: Product[] = [
     branches: { pusat: 300, jakarta: 450, surabaya: 250, bandung: 150, medan: 100 },
     lastRestock: "2024-01-10",
     supplier: "PT Indofood",
+    expireMonths: 8,
   },
   {
     id: 2,
@@ -109,6 +110,7 @@ const initialProducts: Product[] = [
     branches: { pusat: 10, jakarta: 15, surabaya: 10, bandung: 5, medan: 5 },
     lastRestock: "2024-01-08",
     supplier: "PT Ultra Jaya",
+    expireMonths: 1,
   },
   {
     id: 3,
@@ -122,6 +124,7 @@ const initialProducts: Product[] = [
     branches: { pusat: 800, jakarta: 700, surabaya: 600, bandung: 400, medan: 300 },
     lastRestock: "2024-01-12",
     supplier: "PT Danone",
+    expireMonths: 24,
   },
   {
     id: 4,
@@ -135,6 +138,7 @@ const initialProducts: Product[] = [
     branches: { pusat: 5, jakarta: 3, surabaya: 2, bandung: 1, medan: 1 },
     lastRestock: "2024-01-11",
     supplier: "PT Nippon Indosari",
+    expireMonths: 0,
   },
   {
     id: 5,
@@ -148,6 +152,7 @@ const initialProducts: Product[] = [
     branches: { pusat: 200, jakarta: 180, surabaya: 150, bandung: 80, medan: 70 },
     lastRestock: "2024-01-09",
     supplier: "PT Unilever",
+    expireMonths: 36,
   },
   {
     id: 6,
@@ -161,8 +166,14 @@ const initialProducts: Product[] = [
     branches: { pusat: 1000, jakarta: 800, surabaya: 700, bandung: 400, medan: 300 },
     lastRestock: "2024-01-10",
     supplier: "PT Santos Jaya",
+    expireMonths: 18,
   },
 ];
+
+const initialProducts: Product[] = initialProductsRaw.map(({ expireMonths, ...p }) => ({
+  ...p,
+  batches: seedBatches(p.sku, p.branches, expireMonths || 6),
+}));
 
 const categories = ["Semua", "Makanan", "Minuman", "Personal Care", "Snack"];
 
