@@ -593,6 +593,26 @@ export default function Inventory() {
                           <p className="text-sm">{product.supplier}</p>
                         </TableCell>
                         <TableCell className="text-center">
+                          {nextBatch && expStatus ? (
+                            <div className="flex flex-col items-center gap-0.5">
+                              <span className="text-xs font-medium">{nextBatch.expiredDate}</span>
+                              <Badge
+                                className={
+                                  expStatus.variant === "destructive"
+                                    ? "bg-destructive/20 text-destructive text-xs"
+                                    : expStatus.variant === "warning"
+                                      ? "bg-warning/20 text-warning text-xs"
+                                      : "bg-success/20 text-success text-xs"
+                                }
+                              >
+                                {expStatus.days < 0 ? "Expired" : `${expStatus.days}d`}
+                              </Badge>
+                            </div>
+                          ) : (
+                            <span className="text-xs text-muted-foreground">-</span>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-center">
                           <Badge
                             variant={isLowStock ? "destructive" : "default"}
                             className={
