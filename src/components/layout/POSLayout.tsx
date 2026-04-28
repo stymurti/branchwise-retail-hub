@@ -1,9 +1,10 @@
 import { ReactNode } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { ShoppingCart, FileText, Clock, LogOut, Store, Moon, Sun } from "lucide-react";
+import { ShoppingCart, FileText, Clock, LogOut, Store, Moon, Sun, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/hooks/use-theme";
+import { LiveChatWidget } from "@/components/chat/LiveChatWidget";
 
 interface POSLayoutProps {
   children: ReactNode;
@@ -13,6 +14,7 @@ const posNavItems = [
   { title: "Point of Sale", path: "/pos", icon: ShoppingCart },
   { title: "Transaksi", path: "/pos/transactions", icon: FileText },
   { title: "Shift", path: "/pos/shifts", icon: Clock },
+  { title: "Pengaturan", path: "/pos/settings", icon: Settings },
 ];
 
 export function POSLayout({ children }: POSLayoutProps) {
@@ -91,6 +93,8 @@ export function POSLayout({ children }: POSLayoutProps) {
       <main className="flex-1 p-4 overflow-auto">
         {children}
       </main>
+
+      <LiveChatWidget context="pos" />
     </div>
   );
 }

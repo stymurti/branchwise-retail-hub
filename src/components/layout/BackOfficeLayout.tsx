@@ -29,6 +29,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/hooks/use-theme";
+import { LiveChatWidget } from "@/components/chat/LiveChatWidget";
 
 interface BackOfficeLayoutProps {
   children: ReactNode;
@@ -285,6 +286,8 @@ export function BackOfficeLayout({ children }: BackOfficeLayoutProps) {
           {children}
         </main>
       </div>
+
+      <LiveChatWidget context="backoffice" />
     </div>
   );
 }

@@ -1,6 +1,9 @@
+import { useState } from "react";
 import { BackOfficeLayout } from "@/components/layout/BackOfficeLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { FinancialExportModal } from "@/components/reports/FinancialExportModal";
+import { CashierDailyReportModal } from "@/components/reports/CashierDailyReportModal";
 import {
   Select,
   SelectContent,
@@ -96,6 +99,9 @@ const reportTypes = [
 ];
 
 export default function Reports() {
+  const [financialOpen, setFinancialOpen] = useState(false);
+  const [cashierOpen, setCashierOpen] = useState(false);
+
   return (
     <BackOfficeLayout>
       <div className="space-y-6">
@@ -107,7 +113,15 @@ export default function Reports() {
               Dashboard laporan dan export data
             </p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
+            <Button variant="outline" className="gap-2" onClick={() => setCashierOpen(true)}>
+              <FileText className="w-4 h-4" />
+              Laporan Harian Kasir
+            </Button>
+            <Button className="gap-2" onClick={() => setFinancialOpen(true)}>
+              <FileSpreadsheet className="w-4 h-4" />
+              Ekspor Keuangan Bulanan
+            </Button>
             <Select defaultValue="thismonth">
               <SelectTrigger className="w-40">
                 <SelectValue placeholder="Periode" />
@@ -121,6 +135,9 @@ export default function Reports() {
             </Select>
           </div>
         </div>
+
+        <FinancialExportModal open={financialOpen} onOpenChange={setFinancialOpen} />
+        <CashierDailyReportModal open={cashierOpen} onOpenChange={setCashierOpen} />
 
         {/* Quick Export */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
