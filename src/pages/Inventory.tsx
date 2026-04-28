@@ -538,6 +538,7 @@ export default function Inventory() {
                       <TableHead className="text-center">Stok Lokasi</TableHead>
                     )}
                     <TableHead>Supplier</TableHead>
+                    <TableHead className="text-center">Exp. Terdekat</TableHead>
                     <TableHead className="text-center">Status</TableHead>
                     <TableHead className="w-12"></TableHead>
                   </TableRow>
