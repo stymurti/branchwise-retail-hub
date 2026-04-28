@@ -251,6 +251,7 @@ export default function Inventory() {
         branches: { pusat: p.stock },
         lastRestock: new Date().toISOString().split("T")[0],
         supplier: p.supplier,
+        batches: seedBatches(p.sku, { pusat: p.stock }, 6),
       };
     });
 
