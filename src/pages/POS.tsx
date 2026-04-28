@@ -5,20 +5,37 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { PaymentModal } from "@/components/pos/PaymentModal";
 import { ShiftModal } from "@/components/pos/ShiftModal";
-import { Search, Barcode, Plus, Minus, Trash2, CreditCard, Banknote, Wallet, QrCode, User, Percent, X, Clock, AlertTriangle, Package } from "lucide-react";
+import { Search, Barcode, Plus, Minus, Trash2, CreditCard, Banknote, Wallet, QrCode, User, Percent, X, Clock, AlertTriangle, Package, Calendar } from "lucide-react";
 import { toast } from "sonner";
+import { StockBatch, sortBatchesFIFO, consumeFIFO, getExpiryStatus, getNextExpiringBatch } from "@/lib/fifo";
 
 interface CartItem { id: string; name: string; price: number; quantity: number; sku: string; }
 
-const products = [
-  { id: "1", name: "Indomie Goreng", price: 3500, sku: "PRD-001", category: "Makanan", stock: 150, minStock: 50 },
-  { id: "2", name: "Susu Ultra 1L", price: 18500, sku: "PRD-002", category: "Minuman", stock: 8, minStock: 20 },
-  { id: "3", name: "Aqua 600ml", price: 4000, sku: "PRD-003", category: "Minuman", stock: 200, minStock: 50 },
-  { id: "4", name: "Roti Tawar Sari Roti", price: 16000, sku: "PRD-004", category: "Makanan", stock: 5, minStock: 15 },
-  { id: "5", name: "Sabun Lifebuoy 100g", price: 5500, sku: "PRD-005", category: "Personal Care", stock: 3, minStock: 20 },
-  { id: "6", name: "Kopi Kapal Api Sachet", price: 2000, sku: "PRD-006", category: "Minuman", stock: 120, minStock: 30 },
-  { id: "7", name: "Teh Botol Sosro 450ml", price: 5000, sku: "PRD-007", category: "Minuman", stock: 95, minStock: 25 },
-  { id: "8", name: "Oreo Original 133g", price: 12500, sku: "PRD-008", category: "Snack", stock: 10, minStock: 20 },
+// Helper to seed batches per product (POS = single location: "pusat" demo store)
+const STORE_LOCATION = "pusat";
+function seed(sku: string, qty: number, daysToExpire: number): StockBatch[] {
+  if (qty <= 0) return [];
+  const exp = new Date();
+  exp.setDate(exp.getDate() + daysToExpire);
+  // Split into 2 batches to demo FIFO
+  const half = Math.floor(qty / 2);
+  const today = new Date();
+  const older = new Date(); older.setDate(today.getDate() - 30);
+  return [
+    { id: `B-${sku}-1`, quantity: half, expiredDate: new Date(exp.getTime() - 15 * 86400000).toISOString().split("T")[0], receivedDate: older.toISOString().split("T")[0], location: STORE_LOCATION, batchNumber: "LOT-A" },
+    { id: `B-${sku}-2`, quantity: qty - half, expiredDate: exp.toISOString().split("T")[0], receivedDate: today.toISOString().split("T")[0], location: STORE_LOCATION, batchNumber: "LOT-B" },
+  ];
+}
+
+const initialProducts = [
+  { id: "1", name: "Indomie Goreng", price: 3500, sku: "PRD-001", category: "Makanan", stock: 150, minStock: 50, batches: seed("PRD-001", 150, 90) },
+  { id: "2", name: "Susu Ultra 1L", price: 18500, sku: "PRD-002", category: "Minuman", stock: 8, minStock: 20, batches: seed("PRD-002", 8, 5) },
+  { id: "3", name: "Aqua 600ml", price: 4000, sku: "PRD-003", category: "Minuman", stock: 200, minStock: 50, batches: seed("PRD-003", 200, 365) },
+  { id: "4", name: "Roti Tawar Sari Roti", price: 16000, sku: "PRD-004", category: "Makanan", stock: 5, minStock: 15, batches: seed("PRD-004", 5, 3) },
+  { id: "5", name: "Sabun Lifebuoy 100g", price: 5500, sku: "PRD-005", category: "Personal Care", stock: 3, minStock: 20, batches: seed("PRD-005", 3, 720) },
+  { id: "6", name: "Kopi Kapal Api Sachet", price: 2000, sku: "PRD-006", category: "Minuman", stock: 120, minStock: 30, batches: seed("PRD-006", 120, 200) },
+  { id: "7", name: "Teh Botol Sosro 450ml", price: 5000, sku: "PRD-007", category: "Minuman", stock: 95, minStock: 25, batches: seed("PRD-007", 95, 60) },
+  { id: "8", name: "Oreo Original 133g", price: 12500, sku: "PRD-008", category: "Snack", stock: 10, minStock: 20, batches: seed("PRD-008", 10, 25) },
 ];
 
 const categories = ["Semua", "Makanan", "Minuman", "Snack", "Personal Care"];
