@@ -47,6 +47,9 @@ import { AddProductModal } from "@/components/inventory/AddProductModal";
 import { StockTransferModal } from "@/components/inventory/StockTransferModal";
 import { StockOpnameModal } from "@/components/inventory/StockOpnameModal";
 import { PurchaseOrderModal } from "@/components/inventory/PurchaseOrderModal";
+import { BatchManagerModal } from "@/components/inventory/BatchManagerModal";
+import { StockBatch, getNextExpiringBatch, getExpiryStatus, generateBatchId } from "@/lib/fifo";
+import { Calendar } from "lucide-react";
 import { toast } from "sonner";
 
 interface Product {
@@ -61,6 +64,23 @@ interface Product {
   branches: Record<string, number>;
   lastRestock: string;
   supplier: string;
+  batches: StockBatch[];
+}
+
+// Helper to seed initial batches from branch stock distribution
+function seedBatches(sku: string, branches: Record<string, number>, monthsToExpire = 6): StockBatch[] {
+  const today = new Date();
+  const exp = new Date(today.getFullYear(), today.getMonth() + monthsToExpire, today.getDate());
+  return Object.entries(branches)
+    .filter(([_, qty]) => qty > 0)
+    .map(([loc, qty], i) => ({
+      id: `BATCH-${sku}-INIT-${i}`,
+      quantity: qty,
+      expiredDate: exp.toISOString().split("T")[0],
+      receivedDate: today.toISOString().split("T")[0],
+      location: loc,
+      batchNumber: `LOT-INIT-${i + 1}`,
+    }));
 }
 
 const initialProducts: Product[] = [
