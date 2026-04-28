@@ -206,6 +206,18 @@ export default function Inventory() {
   const [isTransferOpen, setIsTransferOpen] = useState(false);
   const [isOpnameOpen, setIsOpnameOpen] = useState(false);
   const [isPOOpen, setIsPOOpen] = useState(false);
+  const [batchProduct, setBatchProduct] = useState<Product | null>(null);
+
+  const handleAddBatch = (productId: number, batch: StockBatch) => {
+    setProducts((prev) => prev.map((p) => {
+      if (p.id !== productId) return p;
+      const newBatches = [...p.batches, batch];
+      const newBranches = { ...p.branches, [batch.location]: (p.branches[batch.location] || 0) + batch.quantity };
+      const newStock = Object.values(newBranches).reduce((s, v) => s + v, 0);
+      return { ...p, batches: newBatches, branches: newBranches, stock: newStock, lastRestock: batch.receivedDate };
+    }));
+    setBatchProduct((bp) => bp && bp.id === productId ? { ...bp, batches: [...bp.batches, batch] } : bp);
+  };
 
   // Determine active tab based on route
   const getActiveTab = () => {
