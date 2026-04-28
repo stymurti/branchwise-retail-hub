@@ -282,6 +282,7 @@ export default function Inventory() {
       id: Date.now(),
       ...newProduct,
       lastRestock: new Date().toISOString().split("T")[0],
+      batches: seedBatches(newProduct.sku, newProduct.branches, 6),
     };
     setProducts([...products, product]);
   };
