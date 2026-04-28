@@ -140,6 +140,19 @@ export default function POS() {
   });
 
   const handlePaymentComplete = (method: string, details: any) => {
+    // FIFO consumption: deduct each cart item from its product batches (oldest expiry first)
+    const fifoLog: string[] = [];
+    setProducts((prev) => prev.map((p) => {
+      const cartItem = cart.find((c) => c.id === p.id);
+      if (!cartItem) return p;
+      const { batches: newBatches, consumed } = consumeFIFO(p.batches, STORE_LOCATION, cartItem.quantity);
+      consumed.forEach((c) => fifoLog.push(`${p.name}: ${c.quantity}x dari batch exp ${c.expiredDate}`));
+      const newStock = newBatches.reduce((s, b) => s + b.quantity, 0);
+      return { ...p, batches: newBatches, stock: newStock };
+    }));
+    if (fifoLog.length > 0) {
+      toast.success("Penjualan FIFO diterapkan", { description: fifoLog.slice(0, 3).join(" • ") });
+    }
     const trx = { id: `TRX-${Date.now()}`, time: new Date(), total, method, items: cart };
     setTransactions((prev) => [...prev, trx]);
     clearCart();
