@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -53,6 +53,7 @@ interface PurchaseOrderModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   products: Product[];
+  autoFillEmptyStock?: boolean;
   onSubmit: (po: {
     poNumber: string;
     supplier: string;
@@ -72,7 +73,7 @@ const locations = [
   { id: "medan", name: "Cabang Medan" },
 ];
 
-export function PurchaseOrderModal({ open, onOpenChange, products, onSubmit }: PurchaseOrderModalProps) {
+export function PurchaseOrderModal({ open, onOpenChange, products, onSubmit, autoFillEmptyStock }: PurchaseOrderModalProps) {
   const [destination, setDestination] = useState("");
   const [selectedProduct, setSelectedProduct] = useState("");
   const [quantity, setQuantity] = useState("");
