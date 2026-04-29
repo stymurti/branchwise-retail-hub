@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -53,6 +53,7 @@ interface PurchaseOrderModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   products: Product[];
+  autoFillEmptyStock?: boolean;
   onSubmit: (po: {
     poNumber: string;
     supplier: string;
@@ -72,7 +73,7 @@ const locations = [
   { id: "medan", name: "Cabang Medan" },
 ];
 
-export function PurchaseOrderModal({ open, onOpenChange, products, onSubmit }: PurchaseOrderModalProps) {
+export function PurchaseOrderModal({ open, onOpenChange, products, onSubmit, autoFillEmptyStock }: PurchaseOrderModalProps) {
   const [destination, setDestination] = useState("");
   const [selectedProduct, setSelectedProduct] = useState("");
   const [quantity, setQuantity] = useState("");
@@ -81,11 +82,42 @@ export function PurchaseOrderModal({ open, onOpenChange, products, onSubmit }: P
   const [expectedDate, setExpectedDate] = useState("");
   const [selectedSupplier, setSelectedSupplier] = useState("");
 
-  // Get low stock products
+  // Get low stock products (includes empty stock = 0)
   const lowStockProducts = products.filter(p => p.stock <= p.minStock);
   
   // Get unique suppliers
   const suppliers = [...new Set(products.map(p => p.supplier))].filter(Boolean);
+
+  // Auto-fill empty/low stock products grouped per vendor when opened via PO route
+  useEffect(() => {
+    if (open && autoFillEmptyStock && poItems.length === 0 && lowStockProducts.length > 0) {
+      const items: POItem[] = lowStockProducts
+        .sort((a, b) => {
+          // Empty stock first, then by supplier
+          if (a.stock === 0 && b.stock !== 0) return -1;
+          if (b.stock === 0 && a.stock !== 0) return 1;
+          return (a.supplier || "").localeCompare(b.supplier || "");
+        })
+        .map((product) => {
+          const needed = Math.max(product.minStock - product.stock, product.minStock);
+          return {
+            productId: product.id,
+            productName: product.name,
+            sku: product.sku,
+            quantity: needed,
+            unitCost: product.cost,
+            totalCost: needed * product.cost,
+            supplier: product.supplier,
+          };
+        });
+      setPOItems(items);
+      const emptyCount = lowStockProducts.filter(p => p.stock === 0).length;
+      const vendorCount = new Set(items.map(i => i.supplier)).size;
+      toast.success(`${items.length} produk diisi otomatis`, {
+        description: `${emptyCount} stok kosong • ${vendorCount} vendor`,
+      });
+    }
+  }, [open, autoFillEmptyStock]);
 
   const generatePONumber = () => {
     const date = new Date();
