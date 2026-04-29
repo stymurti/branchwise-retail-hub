@@ -749,8 +749,12 @@ export default function Inventory() {
 
       <PurchaseOrderModal
         open={isPOOpen}
-        onOpenChange={setIsPOOpen}
+        onOpenChange={(o) => {
+          setIsPOOpen(o);
+          if (!o) setAutoFillPO(false);
+        }}
         products={products}
+        autoFillEmptyStock={autoFillPO}
         onSubmit={handlePO}
       />
 
