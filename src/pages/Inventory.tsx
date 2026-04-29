@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { BackOfficeLayout } from "@/components/layout/BackOfficeLayout";
 import { Button } from "@/components/ui/button";
@@ -206,7 +206,16 @@ export default function Inventory() {
   const [isTransferOpen, setIsTransferOpen] = useState(false);
   const [isOpnameOpen, setIsOpnameOpen] = useState(false);
   const [isPOOpen, setIsPOOpen] = useState(false);
+  const [autoFillPO, setAutoFillPO] = useState(false);
   const [batchProduct, setBatchProduct] = useState<Product | null>(null);
+
+  // Auto-open PO modal with vendor-grouped empty stock prefill when route is /po
+  useEffect(() => {
+    if (location.pathname.includes("/po")) {
+      setIsPOOpen(true);
+      setAutoFillPO(true);
+    }
+  }, [location.pathname]);
 
   const handleAddBatch = (productId: number, batch: StockBatch) => {
     setProducts((prev) => prev.map((p) => {
@@ -341,11 +350,26 @@ export default function Inventory() {
   };
 
   const handlePO = (po: {
+    poNumber?: string;
+    supplier?: string;
     destination: string;
-    items: Array<{ productId: number; quantity: number }>;
+    items: Array<{ productId: number; quantity: number; supplier?: string }>;
+    totalAmount?: number;
   }) => {
-    // In a real app, this would create a PO record
-    console.log("PO Created:", po);
+    // Group items by vendor/supplier and create separate PO per vendor
+    const grouped: Record<string, typeof po.items> = {};
+    po.items.forEach((item) => {
+      const vendor = item.supplier || "Unknown";
+      if (!grouped[vendor]) grouped[vendor] = [];
+      grouped[vendor].push(item);
+    });
+    const vendorCount = Object.keys(grouped).length;
+    Object.entries(grouped).forEach(([vendor, items]) => {
+      console.log(`PO Created for vendor "${vendor}":`, { destination: po.destination, items });
+    });
+    toast.success(`${vendorCount} Purchase Order dibuat (per vendor)`, {
+      description: `Total ${po.items.length} item ke ${po.destination}`,
+    });
   };
 
   const filteredProducts = products.filter((product) => {
