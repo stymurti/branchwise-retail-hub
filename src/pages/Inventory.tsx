@@ -687,7 +687,7 @@ export default function Inventory() {
                                 <Eye className="w-4 h-4 mr-2" />
                                 Lihat Detail
                               </DropdownMenuItem>
-                              <DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => setEditProduct(product)}>
                                 <Edit className="w-4 h-4 mr-2" />
                                 Edit
                               </DropdownMenuItem>
@@ -699,7 +699,10 @@ export default function Inventory() {
                                 <Calendar className="w-4 h-4 mr-2" />
                                 Kelola Batch & Expired
                               </DropdownMenuItem>
-                              <DropdownMenuItem className="text-destructive">
+                              <DropdownMenuItem
+                                className="text-destructive"
+                                onClick={() => handleDeleteProduct(product.id)}
+                              >
                                 <Trash2 className="w-4 h-4 mr-2" />
                                 Hapus
                               </DropdownMenuItem>
