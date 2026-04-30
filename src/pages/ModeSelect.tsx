@@ -33,18 +33,18 @@ export default function ModeSelect() {
             <p className="text-muted-foreground">Pilih mode yang ingin Anda gunakan</p>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-6">
+          <div className="grid md:grid-cols-2 gap-6 items-stretch">
             {/* POS Mode */}
-            <Link to="/pos" className="block group">
-              <div className="p-6 rounded-2xl border-2 border-transparent bg-card hover:border-primary transition-all duration-300 hover:shadow-xl hover:shadow-primary/10">
+            <Link to="/pos" className="block group h-full">
+              <div className="h-full flex flex-col p-6 rounded-2xl border-2 border-transparent bg-card hover:border-primary transition-all duration-300 hover:shadow-xl hover:shadow-primary/10">
                 <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-info flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                   <ShoppingCart className="w-8 h-8 text-primary-foreground" />
                 </div>
                 <h2 className="text-xl font-bold mb-2">POS & Kasir</h2>
-                <p className="text-muted-foreground text-sm mb-4">
+                <p className="text-muted-foreground text-sm mb-4 min-h-[40px]">
                   Mode untuk kasir melakukan transaksi penjualan, pembayaran, dan pengelolaan shift.
                 </p>
-                <ul className="text-sm space-y-2 text-muted-foreground">
+                <ul className="text-sm space-y-2 text-muted-foreground flex-1">
                   <li className="flex items-center gap-2">
                     <div className="w-1.5 h-1.5 rounded-full bg-primary" />
                     Point of Sale
@@ -57,6 +57,10 @@ export default function ModeSelect() {
                     <div className="w-1.5 h-1.5 rounded-full bg-primary" />
                     Shift & Closing
                   </li>
+                  <li className="flex items-center gap-2">
+                    <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+                    Pembayaran & Struk
+                  </li>
                 </ul>
                 <Button className="w-full mt-6" size="lg">
                   Masuk POS
@@ -65,16 +69,16 @@ export default function ModeSelect() {
             </Link>
 
             {/* Back Office Mode */}
-            <Link to="/backoffice" className="block group">
-              <div className="p-6 rounded-2xl border-2 border-transparent bg-card hover:border-primary transition-all duration-300 hover:shadow-xl hover:shadow-primary/10">
+            <Link to="/backoffice" className="block group h-full">
+              <div className="h-full flex flex-col p-6 rounded-2xl border-2 border-transparent bg-card hover:border-primary transition-all duration-300 hover:shadow-xl hover:shadow-primary/10">
                 <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-info to-success flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                   <Briefcase className="w-8 h-8 text-primary-foreground" />
                 </div>
                 <h2 className="text-xl font-bold mb-2">Back Office</h2>
-                <p className="text-muted-foreground text-sm mb-4">
+                <p className="text-muted-foreground text-sm mb-4 min-h-[40px]">
                   Mode untuk manajemen, laporan, inventory, keuangan, dan pengaturan sistem.
                 </p>
-                <ul className="text-sm space-y-2 text-muted-foreground">
+                <ul className="text-sm space-y-2 text-muted-foreground flex-1">
                   <li className="flex items-center gap-2">
                     <div className="w-1.5 h-1.5 rounded-full bg-info" />
                     Dashboard & Analytics
