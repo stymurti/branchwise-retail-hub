@@ -44,6 +44,7 @@ import {
 } from "lucide-react";
 import { ProductImportExport } from "@/components/inventory/ProductImportExport";
 import { AddProductModal } from "@/components/inventory/AddProductModal";
+import { EditProductModal } from "@/components/inventory/EditProductModal";
 import { StockTransferModal } from "@/components/inventory/StockTransferModal";
 import { StockOpnameModal } from "@/components/inventory/StockOpnameModal";
 import { PurchaseOrderModal } from "@/components/inventory/PurchaseOrderModal";
