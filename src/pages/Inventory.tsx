@@ -763,6 +763,14 @@ export default function Inventory() {
         categories={categories}
       />
 
+      <EditProductModal
+        open={!!editProduct}
+        onOpenChange={(o) => !o && setEditProduct(null)}
+        product={editProduct}
+        categories={categories}
+        onSave={handleEditProduct}
+      />
+
       <StockTransferModal
         open={isTransferOpen}
         onOpenChange={setIsTransferOpen}
