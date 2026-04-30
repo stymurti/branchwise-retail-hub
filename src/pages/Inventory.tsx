@@ -44,6 +44,7 @@ import {
 } from "lucide-react";
 import { ProductImportExport } from "@/components/inventory/ProductImportExport";
 import { AddProductModal } from "@/components/inventory/AddProductModal";
+import { EditProductModal } from "@/components/inventory/EditProductModal";
 import { StockTransferModal } from "@/components/inventory/StockTransferModal";
 import { StockOpnameModal } from "@/components/inventory/StockOpnameModal";
 import { PurchaseOrderModal } from "@/components/inventory/PurchaseOrderModal";
@@ -208,6 +209,7 @@ export default function Inventory() {
   const [isPOOpen, setIsPOOpen] = useState(false);
   const [autoFillPO, setAutoFillPO] = useState(false);
   const [batchProduct, setBatchProduct] = useState<Product | null>(null);
+  const [editProduct, setEditProduct] = useState<Product | null>(null);
 
   // Auto-open PO modal with vendor-grouped empty stock prefill when route is /po
   useEffect(() => {
@@ -306,6 +308,31 @@ export default function Inventory() {
       batches: seedBatches(newProduct.sku, newProduct.branches, 6),
     };
     setProducts([...products, product]);
+  };
+
+  const handleEditProduct = (updated: {
+    id: number;
+    sku: string;
+    name: string;
+    category: string;
+    price: number;
+    cost: number;
+    minStock: number;
+    supplier: string;
+    branches: Record<string, number>;
+    stock: number;
+  }) => {
+    setProducts((prev) =>
+      prev.map((p) => (p.id === updated.id ? { ...p, ...updated } : p)),
+    );
+  };
+
+  const handleDeleteProduct = (id: number) => {
+    const target = products.find((p) => p.id === id);
+    if (!target) return;
+    if (!confirm(`Hapus produk "${target.name}"?`)) return;
+    setProducts((prev) => prev.filter((p) => p.id !== id));
+    toast.success("Produk berhasil dihapus");
   };
 
   const handleTransfer = (transfer: {
@@ -660,7 +687,7 @@ export default function Inventory() {
                                 <Eye className="w-4 h-4 mr-2" />
                                 Lihat Detail
                               </DropdownMenuItem>
-                              <DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => setEditProduct(product)}>
                                 <Edit className="w-4 h-4 mr-2" />
                                 Edit
                               </DropdownMenuItem>
@@ -672,7 +699,10 @@ export default function Inventory() {
                                 <Calendar className="w-4 h-4 mr-2" />
                                 Kelola Batch & Expired
                               </DropdownMenuItem>
-                              <DropdownMenuItem className="text-destructive">
+                              <DropdownMenuItem
+                                className="text-destructive"
+                                onClick={() => handleDeleteProduct(product.id)}
+                              >
                                 <Trash2 className="w-4 h-4 mr-2" />
                                 Hapus
                               </DropdownMenuItem>
@@ -731,6 +761,14 @@ export default function Inventory() {
         onOpenChange={setIsAddProductOpen}
         onAdd={handleAddProduct}
         categories={categories}
+      />
+
+      <EditProductModal
+        open={!!editProduct}
+        onOpenChange={(o) => !o && setEditProduct(null)}
+        product={editProduct}
+        categories={categories}
+        onSave={handleEditProduct}
       />
 
       <StockTransferModal
