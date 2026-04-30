@@ -80,7 +80,7 @@ export function PurchaseOrderModal({ open, onOpenChange, products, onSubmit, aut
   const [poItems, setPOItems] = useState<POItem[]>([]);
   const [notes, setNotes] = useState("");
   const [expectedDate, setExpectedDate] = useState("");
-  const [selectedSupplier, setSelectedSupplier] = useState("");
+  const [selectedSupplier, setSelectedSupplier] = useState("all");
 
   // Get low stock products (includes empty stock = 0)
   const lowStockProducts = products.filter(p => p.stock <= p.minStock);
@@ -210,7 +210,7 @@ export function PurchaseOrderModal({ open, onOpenChange, products, onSubmit, aut
 
     onSubmit({
       poNumber: generatePONumber(),
-      supplier: selectedSupplier || "Multiple Suppliers",
+      supplier: selectedSupplier !== "all" ? selectedSupplier : "Multiple Suppliers",
       destination,
       items: poItems,
       notes,
@@ -235,7 +235,7 @@ export function PurchaseOrderModal({ open, onOpenChange, products, onSubmit, aut
 
   const totalAmount = poItems.reduce((sum, item) => sum + item.totalCost, 0);
 
-  const filteredProducts = selectedSupplier 
+  const filteredProducts = selectedSupplier !== "all"
     ? products.filter(p => p.supplier === selectedSupplier)
     : products;
 
@@ -287,7 +287,7 @@ export function PurchaseOrderModal({ open, onOpenChange, products, onSubmit, aut
                   <SelectValue placeholder="Semua supplier" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Semua Supplier</SelectItem>
+                  <SelectItem value="all">Semua Supplier</SelectItem>
                   {suppliers.map((supplier) => (
                     <SelectItem key={supplier} value={supplier}>{supplier}</SelectItem>
                   ))}
