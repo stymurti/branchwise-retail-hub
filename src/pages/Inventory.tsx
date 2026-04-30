@@ -209,6 +209,7 @@ export default function Inventory() {
   const [isPOOpen, setIsPOOpen] = useState(false);
   const [autoFillPO, setAutoFillPO] = useState(false);
   const [batchProduct, setBatchProduct] = useState<Product | null>(null);
+  const [editProduct, setEditProduct] = useState<Product | null>(null);
 
   // Auto-open PO modal with vendor-grouped empty stock prefill when route is /po
   useEffect(() => {
