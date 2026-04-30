@@ -310,6 +310,31 @@ export default function Inventory() {
     setProducts([...products, product]);
   };
 
+  const handleEditProduct = (updated: {
+    id: number;
+    sku: string;
+    name: string;
+    category: string;
+    price: number;
+    cost: number;
+    minStock: number;
+    supplier: string;
+    branches: Record<string, number>;
+    stock: number;
+  }) => {
+    setProducts((prev) =>
+      prev.map((p) => (p.id === updated.id ? { ...p, ...updated } : p)),
+    );
+  };
+
+  const handleDeleteProduct = (id: number) => {
+    const target = products.find((p) => p.id === id);
+    if (!target) return;
+    if (!confirm(`Hapus produk "${target.name}"?`)) return;
+    setProducts((prev) => prev.filter((p) => p.id !== id));
+    toast.success("Produk berhasil dihapus");
+  };
+
   const handleTransfer = (transfer: {
     from: string;
     to: string;
