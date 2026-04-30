@@ -39,91 +39,28 @@ import {
   Eye,
   Mail,
   Phone,
+  Shield,
 } from "lucide-react";
+import { EmployeeFormModal, EmployeeFormData } from "@/components/employees/EmployeeFormModal";
+import { toast } from "sonner";
 
-const employees = [
-  {
-    id: 1,
-    name: "Budi Santoso",
-    email: "budi.santoso@retailpro.id",
-    phone: "0812-3456-7890",
-    position: "Store Manager",
-    department: "Operations",
-    branch: "Jakarta",
-    status: "active",
-    joinDate: "2020-03-15",
-    salary: 12000000,
-    avatar: null,
-  },
-  {
-    id: 2,
-    name: "Dewi Lestari",
-    email: "dewi.lestari@retailpro.id",
-    phone: "0813-5678-9012",
-    position: "Store Manager",
-    department: "Operations",
-    branch: "Surabaya",
-    status: "active",
-    joinDate: "2019-07-22",
-    salary: 11500000,
-    avatar: null,
-  },
-  {
-    id: 3,
-    name: "Andi Wijaya",
-    email: "andi.wijaya@retailpro.id",
-    phone: "0814-7890-1234",
-    position: "Cashier",
-    department: "Sales",
-    branch: "Jakarta",
-    status: "active",
-    joinDate: "2022-01-10",
-    salary: 5500000,
-    avatar: null,
-  },
-  {
-    id: 4,
-    name: "Sari Rahmawati",
-    email: "sari.rahmawati@retailpro.id",
-    phone: "0815-9012-3456",
-    position: "Warehouse Staff",
-    department: "Warehouse",
-    branch: "Bandung",
-    status: "active",
-    joinDate: "2021-05-18",
-    salary: 5000000,
-    avatar: null,
-  },
-  {
-    id: 5,
-    name: "Rudi Hartono",
-    email: "rudi.hartono@retailpro.id",
-    phone: "0816-1234-5678",
-    position: "Finance Staff",
-    department: "Finance",
-    branch: "Jakarta",
-    status: "inactive",
-    joinDate: "2020-11-05",
-    salary: 7500000,
-    avatar: null,
-  },
-  {
-    id: 6,
-    name: "Maya Sari",
-    email: "maya.sari@retailpro.id",
-    phone: "0817-3456-7890",
-    position: "Cashier",
-    department: "Sales",
-    branch: "Surabaya",
-    status: "active",
-    joinDate: "2023-02-28",
-    salary: 5200000,
-    avatar: null,
-  },
+interface Employee extends EmployeeFormData {
+  id: number;
+  avatar: string | null;
+}
+
+const initialEmployees: Employee[] = [
+  { id: 1, name: "Budi Santoso", email: "budi.santoso@retailpro.id", phone: "0812-3456-7890", position: "Store Manager", department: "Operations", branch: "Jakarta", role: "Store Manager", status: "active", joinDate: "2020-03-15", salary: 12000000, avatar: null },
+  { id: 2, name: "Dewi Lestari", email: "dewi.lestari@retailpro.id", phone: "0813-5678-9012", position: "Store Manager", department: "Operations", branch: "Surabaya", role: "Store Manager", status: "active", joinDate: "2019-07-22", salary: 11500000, avatar: null },
+  { id: 3, name: "Andi Wijaya", email: "andi.wijaya@retailpro.id", phone: "0814-7890-1234", position: "Cashier", department: "Sales", branch: "Jakarta", role: "Cashier", status: "active", joinDate: "2022-01-10", salary: 5500000, avatar: null },
+  { id: 4, name: "Sari Rahmawati", email: "sari.rahmawati@retailpro.id", phone: "0815-9012-3456", position: "Warehouse Staff", department: "Warehouse", branch: "Bandung", role: "Warehouse Staff", status: "active", joinDate: "2021-05-18", salary: 5000000, avatar: null },
+  { id: 5, name: "Rudi Hartono", email: "rudi.hartono@retailpro.id", phone: "0816-1234-5678", position: "Finance Staff", department: "Finance", branch: "Jakarta", role: "Store Manager", status: "inactive", joinDate: "2020-11-05", salary: 7500000, avatar: null },
+  { id: 6, name: "Maya Sari", email: "maya.sari@retailpro.id", phone: "0817-3456-7890", position: "Cashier", department: "Sales", branch: "Surabaya", role: "Cashier", status: "active", joinDate: "2023-02-28", salary: 5200000, avatar: null },
 ];
 
 const departments = ["Semua", "Operations", "Sales", "Warehouse", "Finance", "HR"];
 const branches = ["Semua", "Jakarta", "Surabaya", "Bandung", "Medan"];
+const availableRoles = ["Super Admin", "Store Manager", "Cashier", "Warehouse Staff", "Finance Manager"];
 
 function formatCurrency(value: number) {
   return new Intl.NumberFormat("id-ID", {
@@ -134,9 +71,12 @@ function formatCurrency(value: number) {
 }
 
 export default function Employees() {
+  const [employees, setEmployees] = useState<Employee[]>(initialEmployees);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedDepartment, setSelectedDepartment] = useState("Semua");
   const [selectedBranch, setSelectedBranch] = useState("Semua");
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editing, setEditing] = useState<Employee | null>(null);
 
   const filteredEmployees = employees.filter((emp) => {
     const matchesSearch =
@@ -152,6 +92,48 @@ export default function Employees() {
   const activeEmployees = employees.filter((e) => e.status === "active").length;
   const totalSalary = employees.reduce((sum, e) => sum + e.salary, 0);
 
+  const handleSave = (data: EmployeeFormData) => {
+    if (data.id) {
+      setEmployees((prev) => prev.map((e) => (e.id === data.id ? { ...e, ...data } as Employee : e)));
+    } else {
+      const newEmp: Employee = {
+        ...data,
+        id: Math.max(0, ...employees.map((e) => e.id)) + 1,
+        avatar: null,
+      };
+      setEmployees((prev) => [...prev, newEmp]);
+    }
+  };
+
+  const handleEdit = (emp: Employee) => {
+    setEditing(emp);
+    setModalOpen(true);
+  };
+
+  const handleAdd = () => {
+    setEditing(null);
+    setModalOpen(true);
+  };
+
+  const handleDelete = (id: number) => {
+    setEmployees((prev) => prev.filter((e) => e.id !== id));
+    toast.success("Karyawan berhasil dihapus");
+  };
+
+  const handleExport = () => {
+    const headers = ["Nama", "Email", "Telepon", "Posisi", "Departemen", "Cabang", "Role", "Status", "Tanggal Bergabung", "Gaji"];
+    const rows = employees.map((e) => [e.name, e.email, e.phone, e.position, e.department, e.branch, e.role, e.status, e.joinDate, e.salary]);
+    const csv = [headers, ...rows].map((r) => r.join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `karyawan-${new Date().toISOString().split("T")[0]}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success("Data karyawan diekspor");
+  };
+
   return (
     <BackOfficeLayout>
       <div className="space-y-6">
@@ -160,15 +142,15 @@ export default function Employees() {
           <div>
             <h1 className="text-2xl lg:text-3xl font-bold">Data Karyawan</h1>
             <p className="text-muted-foreground mt-1">
-              Kelola karyawan dan penempatan cabang
+              Kelola karyawan, role, dan penempatan cabang
             </p>
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" className="gap-2">
+            <Button variant="outline" className="gap-2" onClick={handleExport}>
               <Download className="w-4 h-4" />
               Export
             </Button>
-            <Button className="gap-2">
+            <Button className="gap-2" onClick={handleAdd}>
               <Plus className="w-4 h-4" />
               Tambah Karyawan
             </Button>
@@ -270,7 +252,7 @@ export default function Employees() {
                 <TableHead>Karyawan</TableHead>
                 <TableHead>Posisi</TableHead>
                 <TableHead>Cabang</TableHead>
-                <TableHead>Departemen</TableHead>
+                <TableHead>Role</TableHead>
                 <TableHead className="text-right">Gaji</TableHead>
                 <TableHead className="text-center">Status</TableHead>
                 <TableHead className="w-12"></TableHead>
@@ -284,10 +266,7 @@ export default function Employees() {
                       <Avatar className="h-10 w-10">
                         <AvatarImage src={emp.avatar || undefined} />
                         <AvatarFallback className="bg-primary/10 text-primary">
-                          {emp.name
-                            .split(" ")
-                            .map((n) => n[0])
-                            .join("")}
+                          {emp.name.split(" ").map((n) => n[0]).join("")}
                         </AvatarFallback>
                       </Avatar>
                       <div>
@@ -309,7 +288,12 @@ export default function Employees() {
                   <TableCell>
                     <Badge variant="secondary">{emp.branch}</Badge>
                   </TableCell>
-                  <TableCell>{emp.department}</TableCell>
+                  <TableCell>
+                    <Badge variant="outline" className="gap-1">
+                      <Shield className="w-3 h-3" />
+                      {emp.role}
+                    </Badge>
+                  </TableCell>
                   <TableCell className="text-right font-medium">
                     {formatCurrency(emp.salary)}
                   </TableCell>
@@ -333,15 +317,18 @@ export default function Employees() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleEdit(emp)}>
                           <Eye className="w-4 h-4 mr-2" />
                           Lihat Detail
                         </DropdownMenuItem>
-                        <DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleEdit(emp)}>
                           <Edit className="w-4 h-4 mr-2" />
                           Edit
                         </DropdownMenuItem>
-                        <DropdownMenuItem className="text-destructive">
+                        <DropdownMenuItem
+                          className="text-destructive"
+                          onClick={() => handleDelete(emp.id)}
+                        >
                           <Trash2 className="w-4 h-4 mr-2" />
                           Hapus
                         </DropdownMenuItem>
@@ -354,6 +341,16 @@ export default function Employees() {
           </Table>
         </div>
       </div>
+
+      <EmployeeFormModal
+        open={modalOpen}
+        onOpenChange={setModalOpen}
+        onSave={handleSave}
+        initialData={editing}
+        roles={availableRoles}
+        departments={departments}
+        branches={branches}
+      />
     </BackOfficeLayout>
   );
 }
