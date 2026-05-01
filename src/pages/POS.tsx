@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { POSLayout } from "@/components/layout/POSLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,7 +7,8 @@ import { PaymentModal } from "@/components/pos/PaymentModal";
 import { ShiftModal } from "@/components/pos/ShiftModal";
 import { MemberModal, Member } from "@/components/pos/MemberModal";
 import { DiscountModal, DiscountConfig } from "@/components/pos/DiscountModal";
-import { Search, Barcode, Plus, Minus, Trash2, CreditCard, Banknote, Wallet, QrCode, User, Percent, X, Clock, AlertTriangle, Package, Calendar } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Search, Barcode, Plus, Minus, Trash2, CreditCard, Banknote, Wallet, QrCode, User, Percent, X, Clock, AlertTriangle, Package, Calendar, Archive, PauseCircle, PlayCircle, Printer, Keyboard } from "lucide-react";
 import { toast } from "sonner";
 import { StockBatch, consumeFIFO, getExpiryStatus, getNextExpiringBatch } from "@/lib/fifo";
 
@@ -83,6 +84,10 @@ export default function POS() {
   const [showLowStock, setShowLowStock] = useState(true);
   const [products, setProducts] = useState(initialProducts);
   const [members, setMembers] = useState<Member[]>(initialMembers);
+  const [heldTabs, setHeldTabs] = useState<TransactionTab[]>([]);
+  const [showShortcutsHelp, setShowShortcutsHelp] = useState(false);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const barcodeInputRef = useRef<HTMLInputElement>(null);
 
   const activeTab = tabs.find((t) => t.id === activeTabId) ?? tabs[0];
   const cart = activeTab.cart;
@@ -207,8 +212,136 @@ export default function POS() {
 
   const openShiftModal = (mode: "open" | "close") => { setShiftMode(mode); setIsShiftOpen(true); };
 
+  // Quick payment (default: tunai pas) — langsung bayar tanpa modal
+  const quickPayCash = () => {
+    if (!isShiftActive) { toast.error("Buka shift terlebih dahulu"); return; }
+    if (cart.length === 0) { toast.error("Keranjang kosong"); return; }
+    handlePaymentComplete("cash", { amountReceived: total, change: 0 });
+    toast.success("Pembayaran tunai berhasil");
+  };
+
+  const openCashDrawer = () => {
+    if (!isShiftActive) { toast.error("Buka shift terlebih dahulu"); return; }
+    toast.success("Laci kasir terbuka", { description: "Sinyal ESC/POS dikirim ke printer" });
+  };
+
+  const holdTransaction = () => {
+    if (cart.length === 0) { toast.error("Tidak ada transaksi untuk ditahan"); return; }
+    const held = { ...activeTab, label: `Hold ${new Date().toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })}` };
+    setHeldTabs((prev) => [...prev, held]);
+    clearCart();
+    toast.success("Transaksi ditahan");
+  };
+
+  const resumeHeldTransaction = () => {
+    if (heldTabs.length === 0) { toast.info("Tidak ada transaksi tertahan"); return; }
+    const last = heldTabs[heldTabs.length - 1];
+    const restored: TransactionTab = { ...last, id: `TAB-${Date.now()}`, label: `Transaksi ${tabs.length + 1}` };
+    setTabs((prev) => [...prev, restored]);
+    setActiveTabId(restored.id);
+    setHeldTabs((prev) => prev.slice(0, -1));
+    toast.success("Transaksi dilanjutkan");
+  };
+
+  const reprintLastReceipt = () => {
+    if (transactions.length === 0) { toast.error("Belum ada transaksi"); return; }
+    const last = transactions[transactions.length - 1];
+    toast.success(`Cetak ulang struk ${last.id}`);
+  };
+
+  const focusSearch = () => { searchInputRef.current?.focus(); searchInputRef.current?.select(); };
+  const focusBarcode = () => { barcodeInputRef.current?.focus(); };
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement;
+      const isTyping = target?.tagName === "INPUT" || target?.tagName === "TEXTAREA";
+      const isFunctionKey = e.key.startsWith("F") && e.key.length > 1;
+      if (isTyping && !isFunctionKey) return;
+
+      if (e.shiftKey && e.key === "F7") { e.preventDefault(); resumeHeldTransaction(); return; }
+      if ((e.ctrlKey || e.metaKey) && (e.key === "p" || e.key === "P")) { e.preventDefault(); reprintLastReceipt(); return; }
+
+      switch (e.key) {
+        case "F1": e.preventDefault(); setShowShortcutsHelp((s) => !s); break;
+        case "F2": e.preventDefault(); focusSearch(); break;
+        case "F3": e.preventDefault(); focusBarcode(); break;
+        case "F4": e.preventDefault(); setIsMemberOpen(true); break;
+        case "F5": e.preventDefault(); setIsDiscountOpen(true); break;
+        case "F6": e.preventDefault(); openCashDrawer(); break;
+        case "F7": e.preventDefault(); holdTransaction(); break;
+        case "F8": e.preventDefault(); quickPayCash(); break;
+        case "F9": e.preventDefault(); if (cart.length > 0 && isShiftActive) setIsPaymentOpen(true); break;
+        case "F10": e.preventDefault(); addNewTab(); break;
+        case "Escape": if (!isTyping) setShowShortcutsHelp(false); break;
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cart, isShiftActive, activeTabId, heldTabs, tabs, transactions, total]);
+
+  const shortcuts: Array<{ key: string; label: string; icon: any; action: () => void; disabled?: boolean; badge?: number }> = [
+    { key: "F1", label: "Bantuan", icon: Keyboard, action: () => setShowShortcutsHelp((s) => !s) },
+    { key: "F2", label: "Cari Barang", icon: Search, action: focusSearch },
+    { key: "F3", label: "Scan Barcode", icon: Barcode, action: focusBarcode },
+    { key: "F4", label: "Member", icon: User, action: () => setIsMemberOpen(true) },
+    { key: "F5", label: "Diskon", icon: Percent, action: () => setIsDiscountOpen(true) },
+    { key: "F6", label: "Buka Laci", icon: Archive, action: openCashDrawer },
+    { key: "F7", label: "Tahan", icon: PauseCircle, action: holdTransaction },
+    { key: "⇧F7", label: "Lanjutkan", icon: PlayCircle, action: resumeHeldTransaction, disabled: heldTabs.length === 0, badge: heldTabs.length || undefined },
+    { key: "F8", label: "Bayar Tunai", icon: Banknote, action: quickPayCash, disabled: cart.length === 0 || !isShiftActive },
+    { key: "F9", label: "Bayar", icon: CreditCard, action: () => { if (cart.length > 0 && isShiftActive) setIsPaymentOpen(true); }, disabled: cart.length === 0 || !isShiftActive },
+    { key: "F10", label: "Tab Baru", icon: Plus, action: addNewTab },
+    { key: "^P", label: "Cetak Ulang", icon: Printer, action: reprintLastReceipt, disabled: transactions.length === 0 },
+  ];
+
   return (
     <POSLayout>
+      {/* Shortcut Toolbar */}
+      <TooltipProvider delayDuration={200}>
+        <div className="mb-3 flex items-center gap-1.5 overflow-x-auto pb-1 -mx-1 px-1">
+          {shortcuts.map((s) => (
+            <Tooltip key={s.key}>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={s.action}
+                  disabled={s.disabled}
+                  className="relative flex-shrink-0 h-12 flex-col gap-0.5 px-3 hover:border-primary hover:bg-primary/5"
+                >
+                  <s.icon className="w-4 h-4" />
+                  <span className="text-[10px] leading-none font-medium">{s.label}</span>
+                  <span className="absolute top-0.5 right-1 text-[8px] font-mono text-muted-foreground">{s.key}</span>
+                  {s.badge !== undefined && (
+                    <Badge variant="destructive" className="absolute -top-1 -left-1 h-4 min-w-4 px-1 text-[9px]">{s.badge}</Badge>
+                  )}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom"><p className="text-xs">{s.label} <span className="opacity-70">({s.key})</span></p></TooltipContent>
+            </Tooltip>
+          ))}
+        </div>
+      </TooltipProvider>
+
+      {showShortcutsHelp && (
+        <div className="mb-3 p-3 rounded-lg border border-primary/30 bg-primary/5">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2"><Keyboard className="w-4 h-4 text-primary" /><span className="font-semibold text-sm">Shortcut Keyboard</span></div>
+            <Button variant="ghost" size="iconSm" onClick={() => setShowShortcutsHelp(false)}><X className="w-4 h-4" /></Button>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
+            {shortcuts.map((s) => (
+              <div key={s.key} className="flex items-center justify-between gap-2 px-2 py-1 rounded bg-background">
+                <span>{s.label}</span>
+                <kbd className="px-1.5 py-0.5 rounded bg-muted font-mono text-[10px]">{s.key}</kbd>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Transaction Tabs */}
       <div className="flex items-center gap-1 mb-3 border-b overflow-x-auto pb-1">
         {tabs.map((t) => {
@@ -241,8 +374,24 @@ export default function POS() {
         <div className="flex-1 flex flex-col bg-card rounded-xl border overflow-hidden min-h-0">
           <div className="p-3 md:p-4 border-b space-y-3">
             <div className="flex gap-2">
-              <div className="relative flex-1"><Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" /><Input placeholder="Cari produk..." className="pl-10" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} /></div>
-              <Button variant="outline" size="icon"><Barcode className="w-5 h-5" /></Button>
+              <div className="relative flex-1"><Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" /><Input ref={searchInputRef} placeholder="Cari produk... (F2)" className="pl-10" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} /></div>
+              <div className="relative">
+                <Button variant="outline" size="icon" onClick={focusBarcode} title="Scan Barcode (F3)"><Barcode className="w-5 h-5" /></Button>
+                <input
+                  ref={barcodeInputRef}
+                  className="absolute opacity-0 pointer-events-none w-0 h-0"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      const code = (e.target as HTMLInputElement).value.trim();
+                      if (!code) return;
+                      const found = products.find((p) => p.sku.toLowerCase() === code.toLowerCase());
+                      if (found) { addToCart(found); toast.success(`+ ${found.name}`); }
+                      else toast.error(`Barcode tidak ditemukan: ${code}`);
+                      (e.target as HTMLInputElement).value = "";
+                    }
+                  }}
+                />
+              </div>
               {!isShiftActive ? <Button onClick={() => openShiftModal("open")} className="gap-2"><Clock className="w-4 h-4" /><span className="hidden sm:inline">Buka Shift</span></Button> : <Button variant="destructive" onClick={() => openShiftModal("close")} className="gap-2"><Clock className="w-4 h-4" /><span className="hidden sm:inline">Tutup Shift</span></Button>}
             </div>
             <div className="flex gap-2 overflow-x-auto pb-1">{categories.map((category) => (<Button key={category} variant={selectedCategory === category ? "default" : "outline"} size="sm" onClick={() => setSelectedCategory(category)} className="whitespace-nowrap text-xs md:text-sm">{category}</Button>))}</div>
