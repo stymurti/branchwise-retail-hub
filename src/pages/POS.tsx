@@ -84,6 +84,10 @@ export default function POS() {
   const [showLowStock, setShowLowStock] = useState(true);
   const [products, setProducts] = useState(initialProducts);
   const [members, setMembers] = useState<Member[]>(initialMembers);
+  const [heldTabs, setHeldTabs] = useState<TransactionTab[]>([]);
+  const [showShortcutsHelp, setShowShortcutsHelp] = useState(false);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const barcodeInputRef = useRef<HTMLInputElement>(null);
 
   const activeTab = tabs.find((t) => t.id === activeTabId) ?? tabs[0];
   const cart = activeTab.cart;
