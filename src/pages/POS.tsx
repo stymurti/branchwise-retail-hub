@@ -212,6 +212,90 @@ export default function POS() {
 
   const openShiftModal = (mode: "open" | "close") => { setShiftMode(mode); setIsShiftOpen(true); };
 
+  // Quick payment (default: tunai pas) — langsung bayar tanpa modal
+  const quickPayCash = () => {
+    if (!isShiftActive) { toast.error("Buka shift terlebih dahulu"); return; }
+    if (cart.length === 0) { toast.error("Keranjang kosong"); return; }
+    handlePaymentComplete("cash", { amountReceived: total, change: 0 });
+    toast.success("Pembayaran tunai berhasil");
+  };
+
+  const openCashDrawer = () => {
+    if (!isShiftActive) { toast.error("Buka shift terlebih dahulu"); return; }
+    toast.success("Laci kasir terbuka", { description: "Sinyal ESC/POS dikirim ke printer" });
+  };
+
+  const holdTransaction = () => {
+    if (cart.length === 0) { toast.error("Tidak ada transaksi untuk ditahan"); return; }
+    const held = { ...activeTab, label: `Hold ${new Date().toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })}` };
+    setHeldTabs((prev) => [...prev, held]);
+    clearCart();
+    toast.success("Transaksi ditahan");
+  };
+
+  const resumeHeldTransaction = () => {
+    if (heldTabs.length === 0) { toast.info("Tidak ada transaksi tertahan"); return; }
+    const last = heldTabs[heldTabs.length - 1];
+    const restored: TransactionTab = { ...last, id: `TAB-${Date.now()}`, label: `Transaksi ${tabs.length + 1}` };
+    setTabs((prev) => [...prev, restored]);
+    setActiveTabId(restored.id);
+    setHeldTabs((prev) => prev.slice(0, -1));
+    toast.success("Transaksi dilanjutkan");
+  };
+
+  const reprintLastReceipt = () => {
+    if (transactions.length === 0) { toast.error("Belum ada transaksi"); return; }
+    const last = transactions[transactions.length - 1];
+    toast.success(`Cetak ulang struk ${last.id}`);
+  };
+
+  const focusSearch = () => { searchInputRef.current?.focus(); searchInputRef.current?.select(); };
+  const focusBarcode = () => { barcodeInputRef.current?.focus(); };
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement;
+      const isTyping = target?.tagName === "INPUT" || target?.tagName === "TEXTAREA";
+      const isFunctionKey = e.key.startsWith("F") && e.key.length > 1;
+      if (isTyping && !isFunctionKey) return;
+
+      if (e.shiftKey && e.key === "F7") { e.preventDefault(); resumeHeldTransaction(); return; }
+      if ((e.ctrlKey || e.metaKey) && (e.key === "p" || e.key === "P")) { e.preventDefault(); reprintLastReceipt(); return; }
+
+      switch (e.key) {
+        case "F1": e.preventDefault(); setShowShortcutsHelp((s) => !s); break;
+        case "F2": e.preventDefault(); focusSearch(); break;
+        case "F3": e.preventDefault(); focusBarcode(); break;
+        case "F4": e.preventDefault(); setIsMemberOpen(true); break;
+        case "F5": e.preventDefault(); setIsDiscountOpen(true); break;
+        case "F6": e.preventDefault(); openCashDrawer(); break;
+        case "F7": e.preventDefault(); holdTransaction(); break;
+        case "F8": e.preventDefault(); quickPayCash(); break;
+        case "F9": e.preventDefault(); if (cart.length > 0 && isShiftActive) setIsPaymentOpen(true); break;
+        case "F10": e.preventDefault(); addNewTab(); break;
+        case "Escape": if (!isTyping) setShowShortcutsHelp(false); break;
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cart, isShiftActive, activeTabId, heldTabs, tabs, transactions, total]);
+
+  const shortcuts: Array<{ key: string; label: string; icon: any; action: () => void; disabled?: boolean; badge?: number }> = [
+    { key: "F1", label: "Bantuan", icon: Keyboard, action: () => setShowShortcutsHelp((s) => !s) },
+    { key: "F2", label: "Cari Barang", icon: Search, action: focusSearch },
+    { key: "F3", label: "Scan Barcode", icon: Barcode, action: focusBarcode },
+    { key: "F4", label: "Member", icon: User, action: () => setIsMemberOpen(true) },
+    { key: "F5", label: "Diskon", icon: Percent, action: () => setIsDiscountOpen(true) },
+    { key: "F6", label: "Buka Laci", icon: Archive, action: openCashDrawer },
+    { key: "F7", label: "Tahan", icon: PauseCircle, action: holdTransaction },
+    { key: "⇧F7", label: "Lanjutkan", icon: PlayCircle, action: resumeHeldTransaction, disabled: heldTabs.length === 0, badge: heldTabs.length || undefined },
+    { key: "F8", label: "Bayar Tunai", icon: Banknote, action: quickPayCash, disabled: cart.length === 0 || !isShiftActive },
+    { key: "F9", label: "Bayar", icon: CreditCard, action: () => { if (cart.length > 0 && isShiftActive) setIsPaymentOpen(true); }, disabled: cart.length === 0 || !isShiftActive },
+    { key: "F10", label: "Tab Baru", icon: Plus, action: addNewTab },
+    { key: "^P", label: "Cetak Ulang", icon: Printer, action: reprintLastReceipt, disabled: transactions.length === 0 },
+  ];
+
   return (
     <POSLayout>
       {/* Transaction Tabs */}
