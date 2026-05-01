@@ -298,6 +298,50 @@ export default function POS() {
 
   return (
     <POSLayout>
+      {/* Shortcut Toolbar */}
+      <TooltipProvider delayDuration={200}>
+        <div className="mb-3 flex items-center gap-1.5 overflow-x-auto pb-1 -mx-1 px-1">
+          {shortcuts.map((s) => (
+            <Tooltip key={s.key}>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={s.action}
+                  disabled={s.disabled}
+                  className="relative flex-shrink-0 h-12 flex-col gap-0.5 px-3 hover:border-primary hover:bg-primary/5"
+                >
+                  <s.icon className="w-4 h-4" />
+                  <span className="text-[10px] leading-none font-medium">{s.label}</span>
+                  <span className="absolute top-0.5 right-1 text-[8px] font-mono text-muted-foreground">{s.key}</span>
+                  {s.badge !== undefined && (
+                    <Badge variant="destructive" className="absolute -top-1 -left-1 h-4 min-w-4 px-1 text-[9px]">{s.badge}</Badge>
+                  )}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom"><p className="text-xs">{s.label} <span className="opacity-70">({s.key})</span></p></TooltipContent>
+            </Tooltip>
+          ))}
+        </div>
+      </TooltipProvider>
+
+      {showShortcutsHelp && (
+        <div className="mb-3 p-3 rounded-lg border border-primary/30 bg-primary/5">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2"><Keyboard className="w-4 h-4 text-primary" /><span className="font-semibold text-sm">Shortcut Keyboard</span></div>
+            <Button variant="ghost" size="iconSm" onClick={() => setShowShortcutsHelp(false)}><X className="w-4 h-4" /></Button>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
+            {shortcuts.map((s) => (
+              <div key={s.key} className="flex items-center justify-between gap-2 px-2 py-1 rounded bg-background">
+                <span>{s.label}</span>
+                <kbd className="px-1.5 py-0.5 rounded bg-muted font-mono text-[10px]">{s.key}</kbd>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Transaction Tabs */}
       <div className="flex items-center gap-1 mb-3 border-b overflow-x-auto pb-1">
         {tabs.map((t) => {
