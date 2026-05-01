@@ -8,7 +8,7 @@ import { ShiftModal } from "@/components/pos/ShiftModal";
 import { MemberModal, Member } from "@/components/pos/MemberModal";
 import { DiscountModal, DiscountConfig } from "@/components/pos/DiscountModal";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Search, Barcode, Plus, Minus, Trash2, CreditCard, Banknote, Wallet, QrCode, User, Percent, X, Clock, AlertTriangle, Package, Calendar, Archive, PauseCircle, PlayCircle, Printer, Keyboard, Calculator, RefreshCw } from "lucide-react";
+import { Search, Barcode, Plus, Minus, Trash2, CreditCard, Banknote, Wallet, QrCode, User, Percent, X, Clock, AlertTriangle, Package, Calendar, Archive, PauseCircle, PlayCircle, Printer, Keyboard } from "lucide-react";
 import { toast } from "sonner";
 import { StockBatch, consumeFIFO, getExpiryStatus, getNextExpiringBatch } from "@/lib/fifo";
 
