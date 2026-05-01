@@ -374,7 +374,7 @@ export default function POS() {
         <div className="flex-1 flex flex-col bg-card rounded-xl border overflow-hidden min-h-0">
           <div className="p-3 md:p-4 border-b space-y-3">
             <div className="flex gap-2">
-              <div className="relative flex-1"><Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" /><Input placeholder="Cari produk..." className="pl-10" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} /></div>
+              <div className="relative flex-1"><Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" /><Input ref={searchInputRef} placeholder="Cari produk... (F2)" className="pl-10" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} /></div>
               <Button variant="outline" size="icon"><Barcode className="w-5 h-5" /></Button>
               {!isShiftActive ? <Button onClick={() => openShiftModal("open")} className="gap-2"><Clock className="w-4 h-4" /><span className="hidden sm:inline">Buka Shift</span></Button> : <Button variant="destructive" onClick={() => openShiftModal("close")} className="gap-2"><Clock className="w-4 h-4" /><span className="hidden sm:inline">Tutup Shift</span></Button>}
             </div>
