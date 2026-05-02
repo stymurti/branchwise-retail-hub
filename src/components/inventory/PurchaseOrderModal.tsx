@@ -475,11 +475,15 @@ export function PurchaseOrderModal({ open, onOpenChange, products, onSubmit, aut
         </div>
 
         <div className="flex gap-2">
-          <Button variant="outline" className="flex-1" onClick={() => onOpenChange(false)}>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
             Batal
           </Button>
+          <Button variant="outline" className="gap-2" onClick={handlePrintOnly}>
+            <Printer className="w-4 h-4" />
+            Print PO
+          </Button>
           <Button className="flex-1" onClick={handleSubmit}>
-            Buat Purchase Order
+            Buat & Cetak PO
           </Button>
         </div>
       </DialogContent>
