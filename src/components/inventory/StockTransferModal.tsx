@@ -332,11 +332,15 @@ export function StockTransferModal({ open, onOpenChange, products, onTransfer }:
         </div>
 
         <div className="flex gap-2">
-          <Button variant="outline" className="flex-1" onClick={() => onOpenChange(false)}>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
             Batal
           </Button>
+          <Button variant="outline" className="gap-2" onClick={handlePrint}>
+            <Printer className="w-4 h-4" />
+            Print Surat Jalan
+          </Button>
           <Button className="flex-1" onClick={handleSubmit}>
-            Proses Transfer
+            Proses & Cetak
           </Button>
         </div>
       </DialogContent>
