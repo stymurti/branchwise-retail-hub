@@ -44,24 +44,8 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { title: "Dashboard", icon: LayoutDashboard, path: "/backoffice" },
-  {
-    title: "Cabang",
-    icon: Building2,
-    children: [
-      { title: "Daftar Cabang", path: "/backoffice/branches", icon: Store },
-      { title: "Transfer Stok", path: "/backoffice/branches/transfer", icon: ArrowLeftRight },
-    ],
-  },
-  {
-    title: "Inventory",
-    icon: Package,
-    children: [
-      { title: "Produk", path: "/backoffice/inventory/products", icon: Package },
-      { title: "Stok Masuk", path: "/backoffice/inventory/stock-in", icon: Warehouse },
-      { title: "Stok Opname", path: "/backoffice/inventory/opname", icon: Calculator },
-      { title: "Purchase Order", path: "/backoffice/inventory/po", icon: FileText },
-    ],
-  },
+  { title: "Cabang", icon: Building2, path: "/backoffice/branches" },
+  { title: "Inventory", icon: Package, path: "/backoffice/inventory/products" },
   { title: "Vendor", icon: Truck, path: "/backoffice/vendors" },
   {
     title: "Keuangan",
@@ -89,7 +73,7 @@ const navItems: NavItem[] = [
 
 export function BackOfficeLayout({ children }: BackOfficeLayoutProps) {
   const [collapsed, setCollapsed] = useState(false);
-  const [expandedItems, setExpandedItems] = useState<string[]>(["Inventory"]);
+  const [expandedItems, setExpandedItems] = useState<string[]>(["Keuangan"]);
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
   const { theme, setTheme } = useTheme();
