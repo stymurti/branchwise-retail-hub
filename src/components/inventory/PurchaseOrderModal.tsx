@@ -26,7 +26,8 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Package, Plus, Trash2, AlertTriangle, ShoppingCart } from "lucide-react";
+import { Package, Plus, Trash2, AlertTriangle, ShoppingCart, Printer } from "lucide-react";
+import { printDocument } from "@/lib/print";
 
 interface Product {
   id: number;
@@ -195,6 +196,60 @@ export function PurchaseOrderModal({ open, onOpenChange, products, onSubmit, aut
     }
   };
 
+  const buildPrintHtml = (poNumber: string, totalAmount: number) => {
+    const destName = locations.find((l) => l.id === destination)?.name || destination;
+    const date = new Date().toLocaleString("id-ID");
+    return `
+      <div class="header">
+        <div>
+          <div class="brand">RetailPro ERP</div>
+          <div>Purchase Order</div>
+        </div>
+        <div style="text-align:right; font-size:12px;">
+          <div><b>No PO:</b> ${poNumber}</div>
+          <div><b>Tanggal:</b> ${date}</div>
+          ${expectedDate ? `<div><b>Diharapkan:</b> ${expectedDate}</div>` : ""}
+        </div>
+      </div>
+      <div class="meta">
+        <div><b>Lokasi Tujuan</b> ${destName}</div>
+        <div><b>Supplier</b> ${selectedSupplier !== "all" ? selectedSupplier : "Multiple Suppliers"}</div>
+      </div>
+      <table>
+        <thead>
+          <tr><th>No</th><th>SKU</th><th>Produk</th><th>Supplier</th><th class="center">Qty</th><th class="right">Harga</th><th class="right">Total</th></tr>
+        </thead>
+        <tbody>
+          ${poItems.map((it, i) => `<tr>
+            <td>${i + 1}</td>
+            <td>${it.sku}</td>
+            <td>${it.productName}</td>
+            <td>${it.supplier}</td>
+            <td class="center">${it.quantity}</td>
+            <td class="right">Rp ${it.unitCost.toLocaleString("id-ID")}</td>
+            <td class="right">Rp ${it.totalCost.toLocaleString("id-ID")}</td>
+          </tr>`).join("")}
+          <tr><td colspan="6" class="right total">Total Amount</td><td class="right total">Rp ${totalAmount.toLocaleString("id-ID")}</td></tr>
+        </tbody>
+      </table>
+      ${notes ? `<p style="margin-top:12px;font-size:12px;"><b>Catatan:</b> ${notes}</p>` : ""}
+      <div class="signs">
+        <div><div class="sign-line">Dibuat Oleh</div></div>
+        <div><div class="sign-line">Disetujui</div></div>
+        <div><div class="sign-line">Supplier</div></div>
+      </div>
+    `;
+  };
+
+  const handlePrintOnly = () => {
+    if (!destination || poItems.length === 0) {
+      toast.error("Lengkapi tujuan dan item PO terlebih dahulu");
+      return;
+    }
+    const totalAmount = poItems.reduce((sum, item) => sum + item.totalCost, 0);
+    printDocument("Purchase Order", buildPrintHtml(generatePONumber(), totalAmount));
+  };
+
   const handleSubmit = () => {
     if (!destination) {
       toast.error("Pilih lokasi tujuan");
@@ -207,9 +262,10 @@ export function PurchaseOrderModal({ open, onOpenChange, products, onSubmit, aut
     }
 
     const totalAmount = poItems.reduce((sum, item) => sum + item.totalCost, 0);
+    const poNumber = generatePONumber();
 
     onSubmit({
-      poNumber: generatePONumber(),
+      poNumber,
       supplier: selectedSupplier !== "all" ? selectedSupplier : "Multiple Suppliers",
       destination,
       items: poItems,
@@ -217,6 +273,9 @@ export function PurchaseOrderModal({ open, onOpenChange, products, onSubmit, aut
       expectedDate,
       totalAmount,
     });
+
+    // Auto print
+    printDocument("Purchase Order", buildPrintHtml(poNumber, totalAmount));
 
     toast.success("Purchase Order berhasil dibuat");
     onOpenChange(false);
@@ -416,11 +475,15 @@ export function PurchaseOrderModal({ open, onOpenChange, products, onSubmit, aut
         </div>
 
         <div className="flex gap-2">
-          <Button variant="outline" className="flex-1" onClick={() => onOpenChange(false)}>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
             Batal
           </Button>
+          <Button variant="outline" className="gap-2" onClick={handlePrintOnly}>
+            <Printer className="w-4 h-4" />
+            Print PO
+          </Button>
           <Button className="flex-1" onClick={handleSubmit}>
-            Buat Purchase Order
+            Buat & Cetak PO
           </Button>
         </div>
       </DialogContent>

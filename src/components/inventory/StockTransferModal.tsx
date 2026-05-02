@@ -25,7 +25,8 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { ArrowRight, Package, Plus, Trash2 } from "lucide-react";
+import { ArrowRight, Package, Plus, Trash2, Printer } from "lucide-react";
+import { printDocument } from "@/lib/print";
 
 interface Product {
   id: number;
@@ -117,6 +118,52 @@ export function StockTransferModal({ open, onOpenChange, products, onTransfer }:
     setTransferItems(transferItems.filter(item => item.productId !== productId));
   };
 
+  const buildPrintHtml = () => {
+    const fromName = locations.find((l) => l.id === fromLocation)?.name || fromLocation;
+    const toName = locations.find((l) => l.id === toLocation)?.name || toLocation;
+    const docNo = `TRF-${Date.now().toString().slice(-8)}`;
+    const date = new Date().toLocaleString("id-ID");
+    const totalQty = transferItems.reduce((s, i) => s + i.quantity, 0);
+    return `
+      <div class="header">
+        <div>
+          <div class="brand">RetailPro ERP</div>
+          <div>Surat Jalan Transfer Stok</div>
+        </div>
+        <div style="text-align:right; font-size:12px;">
+          <div><b>No:</b> ${docNo}</div>
+          <div><b>Tanggal:</b> ${date}</div>
+        </div>
+      </div>
+      <div class="meta">
+        <div><b>Dari</b> ${fromName}</div>
+        <div><b>Ke</b> ${toName}</div>
+        <div><b>Total Item</b> ${transferItems.length} produk</div>
+        <div><b>Total Qty</b> ${totalQty} unit</div>
+      </div>
+      <table>
+        <thead><tr><th>No</th><th>SKU</th><th>Nama Produk</th><th class="center">Qty</th></tr></thead>
+        <tbody>
+          ${transferItems.map((it, i) => `<tr><td>${i + 1}</td><td>${it.sku}</td><td>${it.productName}</td><td class="center">${it.quantity}</td></tr>`).join("")}
+        </tbody>
+      </table>
+      ${notes ? `<p style="margin-top:12px;font-size:12px;"><b>Catatan:</b> ${notes}</p>` : ""}
+      <div class="signs">
+        <div><div class="sign-line">Pengirim</div></div>
+        <div><div class="sign-line">Pengantar</div></div>
+        <div><div class="sign-line">Penerima</div></div>
+      </div>
+    `;
+  };
+
+  const handlePrint = () => {
+    if (!fromLocation || !toLocation || transferItems.length === 0) {
+      toast.error("Lengkapi data transfer terlebih dahulu");
+      return;
+    }
+    printDocument("Surat Jalan Transfer Stok", buildPrintHtml());
+  };
+
   const handleSubmit = () => {
     if (!fromLocation || !toLocation) {
       toast.error("Pilih lokasi asal dan tujuan");
@@ -139,6 +186,9 @@ export function StockTransferModal({ open, onOpenChange, products, onTransfer }:
       items: transferItems,
       notes,
     });
+
+    // Auto open print preview
+    printDocument("Surat Jalan Transfer Stok", buildPrintHtml());
 
     toast.success("Transfer stok berhasil diproses");
     onOpenChange(false);
@@ -282,11 +332,15 @@ export function StockTransferModal({ open, onOpenChange, products, onTransfer }:
         </div>
 
         <div className="flex gap-2">
-          <Button variant="outline" className="flex-1" onClick={() => onOpenChange(false)}>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
             Batal
           </Button>
+          <Button variant="outline" className="gap-2" onClick={handlePrint}>
+            <Printer className="w-4 h-4" />
+            Print Surat Jalan
+          </Button>
           <Button className="flex-1" onClick={handleSubmit}>
-            Proses Transfer
+            Proses & Cetak
           </Button>
         </div>
       </DialogContent>
