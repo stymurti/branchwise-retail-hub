@@ -25,7 +25,8 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { ArrowRight, Package, Plus, Trash2 } from "lucide-react";
+import { ArrowRight, Package, Plus, Trash2, Printer } from "lucide-react";
+import { printDocument } from "@/lib/print";
 
 interface Product {
   id: number;
