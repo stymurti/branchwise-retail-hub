@@ -44,6 +44,7 @@ interface VendorFormModalProps {
   onOpenChange: (open: boolean) => void;
   vendor?: Vendor | null;
   onSave: (vendor: Vendor) => void;
+  categories?: string[];
 }
 
 const emptyVendor: Vendor = {
@@ -65,7 +66,7 @@ const emptyVendor: Vendor = {
   notes: "",
 };
 
-const categories = [
+const defaultCategories = [
   "Makanan & Minuman",
   "Elektronik",
   "Pakaian & Tekstil",
@@ -78,7 +79,8 @@ const categories = [
 
 const paymentTermsList = ["COD", "NET 7", "NET 14", "NET 30", "NET 60", "NET 90"];
 
-export function VendorFormModal({ open, onOpenChange, vendor, onSave }: VendorFormModalProps) {
+export function VendorFormModal({ open, onOpenChange, vendor, onSave, categories }: VendorFormModalProps) {
+  const cats = categories && categories.length > 0 ? categories : defaultCategories;
   const [formData, setFormData] = useState<Vendor>(emptyVendor);
 
   useEffect(() => {
@@ -168,7 +170,7 @@ export function VendorFormModal({ open, onOpenChange, vendor, onSave }: VendorFo
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {categories.map((c) => (
+                  {cats.map((c) => (
                     <SelectItem key={c} value={c}>
                       {c}
                     </SelectItem>
