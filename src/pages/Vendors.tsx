@@ -39,10 +39,12 @@ import {
   CheckCircle2,
   TrendingUp,
   Star,
+  Tags,
 } from "lucide-react";
 import { toast } from "sonner";
 import { VendorFormModal, type Vendor } from "@/components/vendors/VendorFormModal";
 import { VendorDetailModal } from "@/components/vendors/VendorDetailModal";
+import { VendorCategoryModal } from "@/components/vendors/VendorCategoryModal";
 
 const initialVendors: Vendor[] = [
   {
@@ -147,11 +149,22 @@ export default function Vendors() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [formOpen, setFormOpen] = useState(false);
   const [detailOpen, setDetailOpen] = useState(false);
+  const [categoryOpen, setCategoryOpen] = useState(false);
   const [editingVendor, setEditingVendor] = useState<Vendor | null>(null);
   const [viewingVendor, setViewingVendor] = useState<Vendor | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [categories, setCategories] = useState<string[]>([
+    "Makanan & Minuman",
+    "Elektronik",
+    "Pakaian & Tekstil",
+    "Alat Tulis Kantor",
+    "Bahan Baku",
+    "Jasa & Maintenance",
+    "Logistik",
+    "Lainnya",
+  ]);
 
-  const categories = useMemo(
+  const usedCategories = useMemo(
     () => Array.from(new Set(vendors.map((v) => v.category))),
     [vendors]
   );
@@ -206,16 +219,26 @@ export default function Vendors() {
               Kelola data supplier dan vendor untuk pengadaan barang
             </p>
           </div>
-          <Button
-            className="gap-2"
-            onClick={() => {
-              setEditingVendor(null);
-              setFormOpen(true);
-            }}
-          >
-            <Plus className="w-4 h-4" />
-            Tambah Vendor
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              className="gap-2"
+              onClick={() => setCategoryOpen(true)}
+            >
+              <Tags className="w-4 h-4" />
+              Kategori
+            </Button>
+            <Button
+              className="gap-2"
+              onClick={() => {
+                setEditingVendor(null);
+                setFormOpen(true);
+              }}
+            >
+              <Plus className="w-4 h-4" />
+              Tambah Vendor
+            </Button>
+          </div>
         </div>
 
         {/* Stats */}
