@@ -28,6 +28,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { Package, Plus, Trash2, AlertTriangle, ShoppingCart, Printer } from "lucide-react";
 import { printDocument } from "@/lib/print";
+import { useVendors } from "@/lib/vendorStore";
 
 interface Product {
   id: number;
