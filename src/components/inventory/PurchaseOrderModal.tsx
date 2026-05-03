@@ -28,6 +28,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { Package, Plus, Trash2, AlertTriangle, ShoppingCart, Printer } from "lucide-react";
 import { printDocument } from "@/lib/print";
+import { useVendors } from "@/lib/vendorStore";
 
 interface Product {
   id: number;
@@ -83,11 +84,13 @@ export function PurchaseOrderModal({ open, onOpenChange, products, onSubmit, aut
   const [expectedDate, setExpectedDate] = useState("");
   const [selectedSupplier, setSelectedSupplier] = useState("all");
 
+  const { vendors: vendorList, activeVendorNames } = useVendors();
+
   // Get low stock products (includes empty stock = 0)
   const lowStockProducts = products.filter(p => p.stock <= p.minStock);
-  
-  // Get unique suppliers
-  const suppliers = [...new Set(products.map(p => p.supplier))].filter(Boolean);
+
+  // Use active vendors from vendor store
+  const suppliers = activeVendorNames;
 
   // Auto-fill empty/low stock products grouped per vendor when opened via PO route
   useEffect(() => {
@@ -199,6 +202,16 @@ export function PurchaseOrderModal({ open, onOpenChange, products, onSubmit, aut
   const buildPrintHtml = (poNumber: string, totalAmount: number) => {
     const destName = locations.find((l) => l.id === destination)?.name || destination;
     const date = new Date().toLocaleString("id-ID");
+    const vendorName = selectedSupplier !== "all" ? selectedSupplier : "Multiple Suppliers";
+    const vendorInfo = vendorList.find((v) => v.name === vendorName);
+    const vendorBlock = vendorInfo
+      ? `<div style="font-size:11px;line-height:1.4;">
+          <div><b>${vendorInfo.name}</b></div>
+          <div>${vendorInfo.address || ""}</div>
+          <div>${vendorInfo.contactPerson} • ${vendorInfo.phone}</div>
+          <div>Termin: ${vendorInfo.paymentTerms}</div>
+        </div>`
+      : `<div style="font-size:11px;"><b>${vendorName}</b></div>`;
     return `
       <div class="header">
         <div>
@@ -213,7 +226,7 @@ export function PurchaseOrderModal({ open, onOpenChange, products, onSubmit, aut
       </div>
       <div class="meta">
         <div><b>Lokasi Tujuan</b> ${destName}</div>
-        <div><b>Supplier</b> ${selectedSupplier !== "all" ? selectedSupplier : "Multiple Suppliers"}</div>
+        <div><b>Vendor</b> ${vendorBlock}</div>
       </div>
       <table>
         <thead>
