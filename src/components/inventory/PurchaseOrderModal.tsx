@@ -84,11 +84,13 @@ export function PurchaseOrderModal({ open, onOpenChange, products, onSubmit, aut
   const [expectedDate, setExpectedDate] = useState("");
   const [selectedSupplier, setSelectedSupplier] = useState("all");
 
+  const { vendors: vendorList, activeVendorNames } = useVendors();
+
   // Get low stock products (includes empty stock = 0)
   const lowStockProducts = products.filter(p => p.stock <= p.minStock);
-  
-  // Get unique suppliers
-  const suppliers = [...new Set(products.map(p => p.supplier))].filter(Boolean);
+
+  // Use active vendors from vendor store
+  const suppliers = activeVendorNames;
 
   // Auto-fill empty/low stock products grouped per vendor when opened via PO route
   useEffect(() => {
