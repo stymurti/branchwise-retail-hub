@@ -48,6 +48,7 @@ import { EditProductModal } from "@/components/inventory/EditProductModal";
 import { StockTransferModal } from "@/components/inventory/StockTransferModal";
 import { StockOpnameModal } from "@/components/inventory/StockOpnameModal";
 import { PurchaseOrderModal } from "@/components/inventory/PurchaseOrderModal";
+import { useVendors } from "@/lib/vendorStore";
 import { BatchManagerModal } from "@/components/inventory/BatchManagerModal";
 import { StockBatch, getNextExpiringBatch, getExpiryStatus, generateBatchId } from "@/lib/fifo";
 import { Calendar } from "lucide-react";
