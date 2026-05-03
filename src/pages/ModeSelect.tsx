@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { ShoppingCart, Briefcase, Store, Moon, Sun } from "lucide-react";
+import { ShoppingCart, Briefcase, Store, Moon, Sun, Truck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/hooks/use-theme";
 
@@ -33,7 +33,7 @@ export default function ModeSelect() {
             <p className="text-muted-foreground">Pilih mode yang ingin Anda gunakan</p>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-6 items-stretch">
+          <div className="grid md:grid-cols-3 gap-6 items-stretch">
             {/* POS Mode */}
             <Link to="/pos" className="block group h-full">
               <div className="h-full flex flex-col p-6 rounded-2xl border-2 border-transparent bg-card hover:border-primary transition-all duration-300 hover:shadow-xl hover:shadow-primary/10">
