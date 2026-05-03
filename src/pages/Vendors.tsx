@@ -444,6 +444,14 @@ export default function Vendors() {
         onOpenChange={setFormOpen}
         vendor={editingVendor}
         onSave={handleSave}
+        categories={categories}
+      />
+      <VendorCategoryModal
+        open={categoryOpen}
+        onOpenChange={setCategoryOpen}
+        categories={categories}
+        usedCategories={usedCategories}
+        onSave={setCategories}
       />
       <VendorDetailModal
         open={detailOpen}
