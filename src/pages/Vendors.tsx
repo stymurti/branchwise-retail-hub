@@ -142,8 +142,10 @@ const initialVendors: Vendor[] = [
 const formatCurrency = (n: number) =>
   new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(n);
 
+import { useVendors } from "@/lib/vendorStore";
+
 export default function Vendors() {
-  const [vendors, setVendors] = useState<Vendor[]>(initialVendors);
+  const { vendors, setVendors, categories, setCategories } = useVendors();
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -153,16 +155,6 @@ export default function Vendors() {
   const [editingVendor, setEditingVendor] = useState<Vendor | null>(null);
   const [viewingVendor, setViewingVendor] = useState<Vendor | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
-  const [categories, setCategories] = useState<string[]>([
-    "Makanan & Minuman",
-    "Elektronik",
-    "Pakaian & Tekstil",
-    "Alat Tulis Kantor",
-    "Bahan Baku",
-    "Jasa & Maintenance",
-    "Logistik",
-    "Lainnya",
-  ]);
 
   const usedCategories = useMemo(
     () => Array.from(new Set(vendors.map((v) => v.category))),
@@ -192,18 +184,13 @@ export default function Vendors() {
   };
 
   const handleSave = (vendor: Vendor) => {
-    setVendors((prev) => {
-      const exists = prev.some((v) => v.id === vendor.id);
-      if (exists) {
-        return prev.map((v) => (v.id === vendor.id ? vendor : v));
-      }
-      return [vendor, ...prev];
-    });
+    const exists = vendors.some((v) => v.id === vendor.id);
+    setVendors(exists ? vendors.map((v) => (v.id === vendor.id ? vendor : v)) : [vendor, ...vendors]);
   };
 
   const handleDelete = () => {
     if (!deleteId) return;
-    setVendors((prev) => prev.filter((v) => v.id !== deleteId));
+    setVendors(vendors.filter((v) => v.id !== deleteId));
     toast.success("Vendor berhasil dihapus");
     setDeleteId(null);
   };
