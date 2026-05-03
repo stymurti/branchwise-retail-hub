@@ -34,6 +34,7 @@ interface EditProductModalProps {
   onOpenChange: (open: boolean) => void;
   product: EditableProduct | null;
   categories: string[];
+  vendors: string[];
   onSave: (product: EditableProduct & { stock: number }) => void;
 }
 
@@ -50,6 +51,7 @@ export function EditProductModal({
   onOpenChange,
   product,
   categories,
+  vendors,
   onSave,
 }: EditProductModalProps) {
   const [formData, setFormData] = useState({
@@ -164,11 +166,20 @@ export function EditProductModal({
               </Select>
             </div>
             <div className="grid gap-2">
-              <Label>Supplier</Label>
-              <Input
+              <Label>Vendor</Label>
+              <Select
                 value={formData.supplier}
-                onChange={(e) => setFormData({ ...formData, supplier: e.target.value })}
-              />
+                onValueChange={(value) => setFormData({ ...formData, supplier: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Pilih vendor" />
+                </SelectTrigger>
+                <SelectContent>
+                  {vendors.map((v) => (
+                    <SelectItem key={v} value={v}>{v}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
 

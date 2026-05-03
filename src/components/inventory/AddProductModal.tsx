@@ -32,6 +32,7 @@ interface AddProductModalProps {
     branches: Record<string, number>;
   }) => void;
   categories: string[];
+  vendors: string[];
 }
 
 const branches = [
@@ -42,7 +43,7 @@ const branches = [
   { id: "medan", name: "Cabang Medan" },
 ];
 
-export function AddProductModal({ open, onOpenChange, onAdd, categories }: AddProductModalProps) {
+export function AddProductModal({ open, onOpenChange, onAdd, categories, vendors }: AddProductModalProps) {
   const [formData, setFormData] = useState({
     sku: "",
     name: "",
@@ -136,12 +137,20 @@ export function AddProductModal({ open, onOpenChange, onAdd, categories }: AddPr
               </Select>
             </div>
             <div className="grid gap-2">
-              <Label>Supplier</Label>
-              <Input
-                placeholder="Nama supplier"
+              <Label>Vendor</Label>
+              <Select
                 value={formData.supplier}
-                onChange={(e) => setFormData({ ...formData, supplier: e.target.value })}
-              />
+                onValueChange={(value) => setFormData({ ...formData, supplier: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Pilih vendor" />
+                </SelectTrigger>
+                <SelectContent>
+                  {vendors.map((v) => (
+                    <SelectItem key={v} value={v}>{v}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
 
