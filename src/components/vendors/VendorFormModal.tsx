@@ -170,7 +170,7 @@ export function VendorFormModal({ open, onOpenChange, vendor, onSave, categories
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {categories.map((c) => (
+                  {cats.map((c) => (
                     <SelectItem key={c} value={c}>
                       {c}
                     </SelectItem>
