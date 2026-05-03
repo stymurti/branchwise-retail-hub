@@ -197,6 +197,7 @@ function formatCurrency(value: number) {
 
 export default function Inventory() {
   const location = useLocation();
+  const { activeVendorNames } = useVendors();
   const [products, setProducts] = useState<Product[]>(initialProducts);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("Semua");
@@ -762,6 +763,7 @@ export default function Inventory() {
         onOpenChange={setIsAddProductOpen}
         onAdd={handleAddProduct}
         categories={categories}
+        vendors={activeVendorNames}
       />
 
       <EditProductModal
@@ -769,6 +771,7 @@ export default function Inventory() {
         onOpenChange={(o) => !o && setEditProduct(null)}
         product={editProduct}
         categories={categories}
+        vendors={activeVendorNames}
         onSave={handleEditProduct}
       />
 
