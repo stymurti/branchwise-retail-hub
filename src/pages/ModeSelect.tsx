@@ -27,7 +27,7 @@ export default function ModeSelect() {
 
       {/* Main Content */}
       <div className="flex-1 flex items-center justify-center p-4">
-        <div className="w-full max-w-3xl">
+        <div className="w-full max-w-5xl">
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold mb-2">Selamat Datang</h1>
             <p className="text-muted-foreground">Pilih mode yang ingin Anda gunakan</p>
@@ -98,6 +98,40 @@ export default function ModeSelect() {
                 </ul>
                 <Button variant="secondary" className="w-full mt-6" size="lg">
                   Masuk Back Office
+                </Button>
+              </div>
+            </Link>
+
+            {/* Vendor Mode */}
+            <Link to="/backoffice/vendors" className="block group h-full">
+              <div className="h-full flex flex-col p-6 rounded-2xl border-2 border-transparent bg-card hover:border-primary transition-all duration-300 hover:shadow-xl hover:shadow-primary/10">
+                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-warning to-primary flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                  <Truck className="w-8 h-8 text-primary-foreground" />
+                </div>
+                <h2 className="text-xl font-bold mb-2">Vendor</h2>
+                <p className="text-muted-foreground text-sm mb-4 min-h-[40px]">
+                  Mode untuk mengelola data supplier, kategori vendor, dan riwayat pengadaan barang.
+                </p>
+                <ul className="text-sm space-y-2 text-muted-foreground flex-1">
+                  <li className="flex items-center gap-2">
+                    <div className="w-1.5 h-1.5 rounded-full bg-warning" />
+                    Data Supplier
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <div className="w-1.5 h-1.5 rounded-full bg-warning" />
+                    Kategori Vendor
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <div className="w-1.5 h-1.5 rounded-full bg-warning" />
+                    Termin Pembayaran
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <div className="w-1.5 h-1.5 rounded-full bg-warning" />
+                    Rating & Performa
+                  </li>
+                </ul>
+                <Button variant="outline" className="w-full mt-6" size="lg">
+                  Kelola Vendor
                 </Button>
               </div>
             </Link>
