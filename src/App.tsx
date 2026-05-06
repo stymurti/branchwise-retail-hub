@@ -16,6 +16,10 @@ import EmployeeReports from "./pages/EmployeeReports";
 import Reports from "./pages/Reports";
 import Settings from "./pages/Settings";
 import Vendors from "./pages/Vendors";
+import Journal from "./pages/finance/Journal";
+import APAR from "./pages/finance/APAR";
+import CashFlow from "./pages/finance/CashFlow";
+import Expenses from "./pages/finance/Expenses";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
