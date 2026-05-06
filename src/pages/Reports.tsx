@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { FinancialExportModal } from "@/components/reports/FinancialExportModal";
 import { CashierDailyReportModal } from "@/components/reports/CashierDailyReportModal";
+import { ReportDetailModal, ReportType } from "@/components/reports/ReportDetailModal";
 import {
   Select,
   SelectContent,
