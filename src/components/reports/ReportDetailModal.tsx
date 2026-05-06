@@ -3,8 +3,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Download, Printer, FileSpreadsheet } from "lucide-react";
-import { printHTML } from "@/lib/print";
+import { Printer, FileSpreadsheet } from "lucide-react";
+import { printDocument } from "@/lib/print";
 
 export type ReportType = "sales" | "inventory" | "employees" | "finance";
 
