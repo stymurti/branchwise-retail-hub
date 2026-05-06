@@ -72,36 +72,41 @@ function formatCurrency(value: number) {
   return `Rp ${value.toLocaleString()}`;
 }
 
-const reportTypes = [
+const reportTypes: { title: string; description: string; icon: any; color: string; type: ReportType }[] = [
   {
     title: "Laporan Penjualan",
     description: "Ringkasan penjualan per cabang dan periode",
     icon: DollarSign,
     color: "primary",
+    type: "sales",
   },
   {
     title: "Laporan Inventory",
     description: "Status stok dan pergerakan barang",
     icon: Package,
     color: "info",
+    type: "inventory",
   },
   {
     title: "Laporan Karyawan",
     description: "Absensi, payroll, dan kinerja",
     icon: Users,
     color: "success",
+    type: "employees",
   },
   {
     title: "Laporan Keuangan",
     description: "Jurnal, neraca, dan cash flow",
     icon: TrendingUp,
     color: "warning",
+    type: "finance",
   },
 ];
 
 export default function Reports() {
   const [financialOpen, setFinancialOpen] = useState(false);
   const [cashierOpen, setCashierOpen] = useState(false);
+  const [activeReport, setActiveReport] = useState<ReportType | null>(null);
 
   return (
     <BackOfficeLayout>
