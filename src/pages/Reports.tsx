@@ -150,6 +150,7 @@ export default function Reports() {
           {reportTypes.map((report, index) => (
             <Card
               key={report.title}
+              onClick={() => setActiveReport(report.type)}
               className="cursor-pointer hover:shadow-lg transition-all hover:-translate-y-0.5 animate-fade-in"
               style={{ animationDelay: `${index * 100}ms` }}
             >
