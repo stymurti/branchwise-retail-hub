@@ -16,6 +16,10 @@ import EmployeeReports from "./pages/EmployeeReports";
 import Reports from "./pages/Reports";
 import Settings from "./pages/Settings";
 import Vendors from "./pages/Vendors";
+import Journal from "./pages/finance/Journal";
+import APAR from "./pages/finance/APAR";
+import CashFlow from "./pages/finance/CashFlow";
+import Expenses from "./pages/finance/Expenses";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -47,10 +51,10 @@ const App = () => (
             <Route path="/backoffice/inventory/opname" element={<Inventory />} />
             <Route path="/backoffice/inventory/po" element={<Inventory />} />
             <Route path="/backoffice/vendors" element={<Vendors />} />
-            <Route path="/backoffice/finance/journal" element={<Reports />} />
-            <Route path="/backoffice/finance/ap-ar" element={<Reports />} />
-            <Route path="/backoffice/finance/cashflow" element={<Reports />} />
-            <Route path="/backoffice/finance/expenses" element={<Reports />} />
+            <Route path="/backoffice/finance/journal" element={<Journal />} />
+            <Route path="/backoffice/finance/ap-ar" element={<APAR />} />
+            <Route path="/backoffice/finance/cashflow" element={<CashFlow />} />
+            <Route path="/backoffice/finance/expenses" element={<Expenses />} />
             <Route path="/backoffice/hr/employees" element={<Employees />} />
             <Route path="/backoffice/hr/attendance" element={<EmployeeReports />} />
             <Route path="/backoffice/hr/schedule" element={<Employees />} />
