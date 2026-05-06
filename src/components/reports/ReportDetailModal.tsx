@@ -97,7 +97,7 @@ function exportCSV(filename: string, rows: any[]) {
 }
 
 function printReport(title: string, html: string) {
-  printHTML(`
+  printDocument(title, `
     <div style="font-family: Arial, sans-serif; padding: 20px;">
       <h1 style="border-bottom: 2px solid #333; padding-bottom: 10px;">RetailPro - ${title}</h1>
       <p style="color:#666; margin-bottom:20px;">Periode: Mei 2026 | Dicetak: ${new Date().toLocaleString("id-ID")}</p>
