@@ -68,7 +68,7 @@ export default function ModeSelect() {
           <div className="grid md:grid-cols-3 gap-6 items-stretch">
             {/* gating wrappers added below via pointer-events */}
             {/* POS Mode */}
-            <Link to="/pos" className="block group h-full">
+            <Link to={canPOS ? "/pos" : "#"} onClick={(e) => { if (!canPOS) e.preventDefault(); }} className={`block group h-full ${!canPOS ? "opacity-50 pointer-events-none" : ""}`}>
               <div className="h-full flex flex-col p-6 rounded-2xl border-2 border-transparent bg-card hover:border-primary transition-all duration-300 hover:shadow-xl hover:shadow-primary/10">
                 <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-info flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                   <ShoppingCart className="w-8 h-8 text-primary-foreground" />
