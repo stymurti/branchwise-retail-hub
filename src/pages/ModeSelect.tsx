@@ -1,10 +1,22 @@
-import { Link } from "react-router-dom";
-import { ShoppingCart, Briefcase, Store, Moon, Sun, Truck } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { ShoppingCart, Briefcase, Store, Moon, Sun, Truck, LogOut, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/hooks/use-theme";
+import { useAuth, ROLE_LABELS } from "@/hooks/use-auth";
 
 export default function ModeSelect() {
   const { theme, setTheme } = useTheme();
+  const { profile, role, signOut } = useAuth();
+  const navigate = useNavigate();
+  const isSuper = role === "super_admin";
+  const canBackOffice = role === "super_admin" || role === "admin" || role === "staff";
+  const canPOS = role === "super_admin" || role === "admin" || role === "cashier";
+  const canVendors = role === "super_admin" || role === "admin";
+
+  const handleLogout = async () => {
+    await signOut();
+    navigate("/login", { replace: true });
+  };
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -16,26 +28,47 @@ export default function ModeSelect() {
           </div>
           <span className="font-bold text-lg">RetailPro ERP</span>
         </div>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-        >
-          {theme === "dark" ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-        </Button>
+        <div className="flex items-center gap-2">
+          {profile && (
+            <div className="hidden sm:flex flex-col items-end leading-tight mr-2">
+              <span className="text-sm font-medium">{profile.full_name || profile.username}</span>
+              <span className="text-xs text-muted-foreground">{role ? ROLE_LABELS[role] : "—"}</span>
+            </div>
+          )}
+          <Button variant="ghost" size="icon" onClick={() => setTheme(theme === "dark" ? "light" : "dark")}>
+            {theme === "dark" ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+          </Button>
+          <Button variant="ghost" size="icon" onClick={handleLogout} title="Logout">
+            <LogOut className="w-5 h-5" />
+          </Button>
+        </div>
       </header>
 
       {/* Main Content */}
       <div className="flex-1 flex items-center justify-center p-4">
         <div className="w-full max-w-5xl">
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold mb-2">Selamat Datang</h1>
+            <h1 className="text-3xl font-bold mb-2">
+              Selamat Datang{profile ? `, ${profile.full_name || profile.username}` : ""}
+            </h1>
             <p className="text-muted-foreground">Pilih mode yang ingin Anda gunakan</p>
           </div>
 
+          {isSuper && (
+            <div className="mb-6 flex justify-center">
+              <Link to="/backoffice/users">
+                <Button variant="outline" className="gap-2">
+                  <Users className="w-4 h-4" />
+                  Manajemen User
+                </Button>
+              </Link>
+            </div>
+          )}
+
           <div className="grid md:grid-cols-3 gap-6 items-stretch">
+            {/* gating wrappers added below via pointer-events */}
             {/* POS Mode */}
-            <Link to="/pos" className="block group h-full">
+            <Link to={canPOS ? "/pos" : "#"} onClick={(e) => { if (!canPOS) e.preventDefault(); }} className={`block group h-full ${!canPOS ? "opacity-50 pointer-events-none" : ""}`}>
               <div className="h-full flex flex-col p-6 rounded-2xl border-2 border-transparent bg-card hover:border-primary transition-all duration-300 hover:shadow-xl hover:shadow-primary/10">
                 <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-info flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                   <ShoppingCart className="w-8 h-8 text-primary-foreground" />
@@ -69,7 +102,7 @@ export default function ModeSelect() {
             </Link>
 
             {/* Back Office Mode */}
-            <Link to="/backoffice" className="block group h-full">
+            <Link to={canBackOffice ? "/backoffice" : "#"} onClick={(e) => { if (!canBackOffice) e.preventDefault(); }} className={`block group h-full ${!canBackOffice ? "opacity-50 pointer-events-none" : ""}`}>
               <div className="h-full flex flex-col p-6 rounded-2xl border-2 border-transparent bg-card hover:border-primary transition-all duration-300 hover:shadow-xl hover:shadow-primary/10">
                 <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-info to-success flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                   <Briefcase className="w-8 h-8 text-primary-foreground" />
@@ -103,7 +136,7 @@ export default function ModeSelect() {
             </Link>
 
             {/* Vendor Mode */}
-            <Link to="/backoffice/vendors" className="block group h-full">
+            <Link to={canVendors ? "/backoffice/vendors" : "#"} onClick={(e) => { if (!canVendors) e.preventDefault(); }} className={`block group h-full ${!canVendors ? "opacity-50 pointer-events-none" : ""}`}>
               <div className="h-full flex flex-col p-6 rounded-2xl border-2 border-transparent bg-card hover:border-primary transition-all duration-300 hover:shadow-xl hover:shadow-primary/10">
                 <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-warning to-primary flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                   <Truck className="w-8 h-8 text-primary-foreground" />
