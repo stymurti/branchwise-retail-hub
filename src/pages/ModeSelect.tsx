@@ -102,7 +102,7 @@ export default function ModeSelect() {
             </Link>
 
             {/* Back Office Mode */}
-            <Link to="/backoffice" className="block group h-full">
+            <Link to={canBackOffice ? "/backoffice" : "#"} onClick={(e) => { if (!canBackOffice) e.preventDefault(); }} className={`block group h-full ${!canBackOffice ? "opacity-50 pointer-events-none" : ""}`}>
               <div className="h-full flex flex-col p-6 rounded-2xl border-2 border-transparent bg-card hover:border-primary transition-all duration-300 hover:shadow-xl hover:shadow-primary/10">
                 <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-info to-success flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                   <Briefcase className="w-8 h-8 text-primary-foreground" />
