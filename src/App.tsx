@@ -46,6 +46,8 @@ const App = () => (
             <Routes>
               <Route path="/" element={<Navigate to="/mode-select" replace />} />
               <Route path="/login" element={<Login />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
 
               <Route path="/mode-select" element={
                 <ProtectedRoute allow={[...All]}><ModeSelect /></ProtectedRoute>
