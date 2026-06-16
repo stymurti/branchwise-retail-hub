@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 import { Store, Loader2, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -131,6 +131,11 @@ export default function Login() {
             {submitting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
             Masuk
           </Button>
+          <div className="flex items-center justify-between pt-1">
+            <Link to="/forgot-password" className="text-xs text-primary hover:underline">
+              Lupa password?
+            </Link>
+          </div>
           <p className="text-xs text-center text-muted-foreground pt-2">
             Belum punya akun? Hubungi Super Admin Anda.
           </p>

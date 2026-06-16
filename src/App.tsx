@@ -7,6 +7,8 @@ import { ThemeProvider } from "@/hooks/use-theme";
 import { AuthProvider } from "@/hooks/use-auth";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import Login from "./pages/Login";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 import UserManagement from "./pages/UserManagement";
 import ModeSelect from "./pages/ModeSelect";
 import POS from "./pages/POS";
@@ -46,6 +48,8 @@ const App = () => (
             <Routes>
               <Route path="/" element={<Navigate to="/mode-select" replace />} />
               <Route path="/login" element={<Login />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
 
               <Route path="/mode-select" element={
                 <ProtectedRoute allow={[...All]}><ModeSelect /></ProtectedRoute>
