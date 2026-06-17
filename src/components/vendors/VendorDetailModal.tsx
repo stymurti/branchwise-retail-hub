@@ -199,6 +199,17 @@ export function VendorDetailModal({ open, onOpenChange, vendor }: VendorDetailMo
             </div>
           )}
         </div>
+          </TabsContent>
+          <TabsContent value="products">
+            {dbVendor ? (
+              <VendorProductsTab vendorId={dbVendor.id} />
+            ) : (
+              <div className="py-8 text-center text-sm text-muted-foreground">
+                Vendor ini belum ada di database. Tambahkan vendor lewat menu Vendor di database (atau hubungkan nama yang sama) untuk mengelola produknya.
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
 
         <div className="flex justify-end">
           <Button variant="outline" onClick={() => onOpenChange(false)}>
