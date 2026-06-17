@@ -1,9 +1,11 @@
 import { ReactNode } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { ShoppingCart, FileText, Clock, LogOut, Store, Moon, Sun, Settings } from "lucide-react";
+import { ShoppingCart, FileText, Clock, LogOut, Store, Moon, Sun, Settings, Building2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { useTheme } from "@/hooks/use-theme";
+import { useAuth } from "@/hooks/use-auth";
 import { LiveChatWidget } from "@/components/chat/LiveChatWidget";
 
 interface POSLayoutProps {
@@ -20,6 +22,7 @@ const posNavItems = [
 export function POSLayout({ children }: POSLayoutProps) {
   const location = useLocation();
   const { theme, setTheme } = useTheme();
+  const { activeBranch, availableBranches, setActiveBranch } = useAuth();
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -32,6 +35,16 @@ export function POSLayout({ children }: POSLayoutProps) {
             </div>
             <span className="font-bold text-lg">RetailPro</span>
             <span className="text-xs bg-primary/20 text-primary px-2 py-0.5 rounded-full">POS</span>
+            {activeBranch && (
+              <Badge variant="outline" className="gap-1 ml-1">
+                <Building2 className="w-3 h-3" /> {activeBranch.name}
+              </Badge>
+            )}
+            {availableBranches.length > 1 && (
+              <Button variant="ghost" size="sm" className="text-xs h-7" onClick={() => setActiveBranch(null)}>
+                Ganti Cabang
+              </Button>
+            )}
           </div>
           
           <nav className="hidden md:flex items-center gap-1 ml-6">

@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider } from "@/hooks/use-theme";
 import { AuthProvider } from "@/hooks/use-auth";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
+import { BranchGate } from "@/components/auth/BranchGate";
 import Login from "./pages/Login";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
@@ -26,7 +27,11 @@ import Journal from "./pages/finance/Journal";
 import APAR from "./pages/finance/APAR";
 import CashFlow from "./pages/finance/CashFlow";
 import Expenses from "./pages/finance/Expenses";
+import PurchaseOrders from "./pages/purchasing/PurchaseOrders";
+import NewPurchaseOrder from "./pages/purchasing/NewPurchaseOrder";
+import ReceivePurchaseOrder from "./pages/purchasing/ReceivePurchaseOrder";
 import NotFound from "./pages/NotFound";
+
 
 const queryClient = new QueryClient();
 
@@ -55,11 +60,12 @@ const App = () => (
                 <ProtectedRoute allow={[...All]}><ModeSelect /></ProtectedRoute>
               } />
 
-              {/* POS Routes */}
-              <Route path="/pos" element={<ProtectedRoute allow={[...POSRoles]}><POS /></ProtectedRoute>} />
-              <Route path="/pos/transactions" element={<ProtectedRoute allow={[...POSRoles]}><POSTransactions /></ProtectedRoute>} />
-              <Route path="/pos/shifts" element={<ProtectedRoute allow={[...POSRoles]}><POS /></ProtectedRoute>} />
+              {/* POS Routes - wrapped in BranchGate */}
+              <Route path="/pos" element={<ProtectedRoute allow={[...POSRoles]}><BranchGate><POS /></BranchGate></ProtectedRoute>} />
+              <Route path="/pos/transactions" element={<ProtectedRoute allow={[...POSRoles]}><BranchGate><POSTransactions /></BranchGate></ProtectedRoute>} />
+              <Route path="/pos/shifts" element={<ProtectedRoute allow={[...POSRoles]}><BranchGate><POS /></BranchGate></ProtectedRoute>} />
               <Route path="/pos/settings" element={<ProtectedRoute allow={[...AdminOnly]}><POSSettings /></ProtectedRoute>} />
+
 
               {/* Back Office Routes */}
               <Route path="/backoffice" element={<ProtectedRoute allow={[...BO]}><Dashboard /></ProtectedRoute>} />
@@ -71,10 +77,14 @@ const App = () => (
               <Route path="/backoffice/inventory/opname" element={<ProtectedRoute allow={[...BO]}><Inventory /></ProtectedRoute>} />
               <Route path="/backoffice/inventory/po" element={<ProtectedRoute allow={[...BO]}><Inventory /></ProtectedRoute>} />
               <Route path="/backoffice/vendors" element={<ProtectedRoute allow={[...AdminOnly]}><Vendors /></ProtectedRoute>} />
+              <Route path="/backoffice/purchasing/po" element={<ProtectedRoute allow={[...BO]}><PurchaseOrders /></ProtectedRoute>} />
+              <Route path="/backoffice/purchasing/po/new" element={<ProtectedRoute allow={[...BO]}><NewPurchaseOrder /></ProtectedRoute>} />
+              <Route path="/backoffice/purchasing/receive/:id" element={<ProtectedRoute allow={[...BO]}><ReceivePurchaseOrder /></ProtectedRoute>} />
               <Route path="/backoffice/finance/journal" element={<ProtectedRoute allow={[...AdminOnly]}><Journal /></ProtectedRoute>} />
               <Route path="/backoffice/finance/ap-ar" element={<ProtectedRoute allow={[...AdminOnly]}><APAR /></ProtectedRoute>} />
               <Route path="/backoffice/finance/cashflow" element={<ProtectedRoute allow={[...AdminOnly]}><CashFlow /></ProtectedRoute>} />
               <Route path="/backoffice/finance/expenses" element={<ProtectedRoute allow={[...AdminOnly]}><Expenses /></ProtectedRoute>} />
+
               <Route path="/backoffice/hr/employees" element={<ProtectedRoute allow={[...AdminOnly]}><Employees /></ProtectedRoute>} />
               <Route path="/backoffice/hr/attendance" element={<ProtectedRoute allow={[...AdminOnly]}><EmployeeReports /></ProtectedRoute>} />
               <Route path="/backoffice/hr/schedule" element={<ProtectedRoute allow={[...AdminOnly]}><Employees /></ProtectedRoute>} />
