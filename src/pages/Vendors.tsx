@@ -143,6 +143,7 @@ const formatCurrency = (n: number) =>
   new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(n);
 
 import { useVendors } from "@/lib/vendorStore";
+import { useUpsertVendor } from "@/hooks/use-vendors-db";
 
 export default function Vendors() {
   const { vendors, setVendors, categories, setCategories } = useVendors();
@@ -183,9 +184,23 @@ export default function Vendors() {
         : "0",
   };
 
+  const dbUpsert = useUpsertVendor();
+
   const handleSave = (vendor: Vendor) => {
     const exists = vendors.some((v) => v.id === vendor.id);
     setVendors(exists ? vendors.map((v) => (v.id === vendor.id ? vendor : v)) : [vendor, ...vendors]);
+    // sync to DB (best-effort, ignore errors)
+    dbUpsert.mutate({
+      name: vendor.name,
+      code: vendor.code,
+      category: vendor.category,
+      contact_person: vendor.contactPerson,
+      phone: vendor.phone,
+      email: vendor.email,
+      address: vendor.address,
+      payment_terms: vendor.paymentTerms,
+      status: vendor.status,
+    });
   };
 
   const handleDelete = () => {
