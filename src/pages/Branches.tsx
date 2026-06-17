@@ -17,336 +17,80 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { BranchDetailModal } from "@/components/branches/BranchDetailModal";
-import { toast } from "sonner";
 import {
-  Plus,
-  MapPin,
-  Users,
-  Package,
-  TrendingUp,
-  Building2,
-  Phone,
-  Edit,
+  Plus, MapPin, Users, Building2, Phone, Edit, Trash2, UserPlus, X,
 } from "lucide-react";
+import { useBranches, useUpsertBranch, useDeleteBranch, type Branch } from "@/hooks/use-branches";
+import {
+  useEmployees,
+  useBranchEmployees,
+  useAssignEmployee,
+  useUnassignEmployee,
+} from "@/hooks/use-employees-db";
 
-interface Branch {
-  id: number;
-  name: string;
-  code: string;
-  address: string;
-  phone: string;
-  email: string;
-  manager: string;
-  employees: number;
-  products: number;
-  status: "active" | "inactive";
-  salesThisMonth: number;
-  salesTarget: number;
-}
-
-const initialBranches: Branch[] = [
-  { id: 1, name: "Cabang Jakarta Pusat", code: "JKT-01", address: "Jl. Thamrin No. 45, Jakarta Pusat", phone: "021-5555-1234", email: "jakarta@retailpro.id", manager: "Budi Santoso", employees: 24, products: 1250, status: "active", salesThisMonth: 156000000, salesTarget: 180000000 },
-  { id: 2, name: "Cabang Surabaya", code: "SBY-01", address: "Jl. Basuki Rahmat No. 88, Surabaya", phone: "031-5555-5678", email: "surabaya@retailpro.id", manager: "Dewi Lestari", employees: 18, products: 980, status: "active", salesThisMonth: 98000000, salesTarget: 100000000 },
-  { id: 3, name: "Cabang Bandung", code: "BDG-01", address: "Jl. Asia Afrika No. 120, Bandung", phone: "022-5555-9012", email: "bandung@retailpro.id", manager: "Andi Wijaya", employees: 12, products: 750, status: "active", salesThisMonth: 72000000, salesTarget: 80000000 },
-  { id: 4, name: "Cabang Medan", code: "MDN-01", address: "Jl. Gatot Subroto No. 55, Medan", phone: "061-5555-3456", email: "medan@retailpro.id", manager: "Sari Rahmawati", employees: 10, products: 620, status: "active", salesThisMonth: 45000000, salesTarget: 60000000 },
-  { id: 5, name: "Cabang Semarang", code: "SMG-01", address: "Jl. Pandanaran No. 77, Semarang", phone: "024-5555-7890", email: "semarang@retailpro.id", manager: "Rudi Hartono", employees: 8, products: 480, status: "inactive", salesThisMonth: 0, salesTarget: 50000000 },
-];
-
-function formatCurrency(value: number) {
-  return new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(value);
-}
+const emptyForm = { name: "", code: "", address: "", phone: "", manager: "", opening_hours: "" };
 
 export default function Branches() {
-  const [branches, setBranches] = useState<Branch[]>(initialBranches);
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [selectedBranch, setSelectedBranch] = useState<Branch | null>(null);
-  const [isDetailOpen, setIsDetailOpen] = useState(false);
-  const [editingBranch, setEditingBranch] = useState<Branch | null>(null);
-  
-  // Form state
-  const [formData, setFormData] = useState({
-    name: "",
-    code: "",
-    address: "",
-    phone: "",
-    email: "",
-    manager: "",
-  });
+  const { data: branches = [], isLoading } = useBranches();
+  const upsert = useUpsertBranch();
+  const del = useDeleteBranch();
 
-  const totalSales = branches.reduce((sum, b) => sum + b.salesThisMonth, 0);
-  const totalEmployees = branches.reduce((sum, b) => sum + b.employees, 0);
-  const totalProducts = branches.reduce((sum, b) => sum + b.products, 0);
-  const activeBranches = branches.filter(b => b.status === "active").length;
+  const [open, setOpen] = useState(false);
+  const [editing, setEditing] = useState<Branch | null>(null);
+  const [form, setForm] = useState(emptyForm);
+  const [assignFor, setAssignFor] = useState<Branch | null>(null);
 
-  const handleRowClick = (branch: Branch) => {
-    setSelectedBranch(branch);
-    setIsDetailOpen(true);
-  };
-
-  const handleToggleStatus = (e: React.MouseEvent, branchId: number) => {
-    e.stopPropagation();
-    setBranches(branches.map(b => {
-      if (b.id === branchId) {
-        const newStatus = b.status === "active" ? "inactive" : "active";
-        toast.success(`Cabang ${b.name} ${newStatus === "active" ? "diaktifkan" : "dinonaktifkan"}`);
-        return { ...b, status: newStatus };
-      }
-      return b;
-    }));
-  };
-
-  const handleAddBranch = () => {
-    if (!formData.name || !formData.code) {
-      toast.error("Nama dan kode cabang wajib diisi");
-      return;
-    }
-
-    const newBranch: Branch = {
-      id: Date.now(),
-      name: formData.name,
-      code: formData.code,
-      address: formData.address,
-      phone: formData.phone,
-      email: formData.email,
-      manager: formData.manager,
-      employees: 0,
-      products: 0,
-      status: "active",
-      salesThisMonth: 0,
-      salesTarget: 50000000,
-    };
-
-    setBranches([...branches, newBranch]);
-    toast.success("Cabang baru berhasil ditambahkan");
-    setIsAddDialogOpen(false);
-    setFormData({ name: "", code: "", address: "", phone: "", email: "", manager: "" });
-  };
-
-  const handleEditBranch = (e: React.MouseEvent, branch: Branch) => {
-    e.stopPropagation();
-    setEditingBranch(branch);
-    setFormData({
-      name: branch.name,
-      code: branch.code,
-      address: branch.address,
-      phone: branch.phone,
-      email: branch.email,
-      manager: branch.manager,
+  const startNew = () => { setEditing(null); setForm(emptyForm); setOpen(true); };
+  const startEdit = (b: Branch) => {
+    setEditing(b);
+    setForm({
+      name: b.name, code: b.code ?? "", address: b.address ?? "",
+      phone: b.phone ?? "", manager: b.manager ?? "", opening_hours: b.opening_hours ?? "",
     });
+    setOpen(true);
   };
 
-  const handleSaveEdit = () => {
-    if (!editingBranch) return;
-
-    setBranches(branches.map(b => {
-      if (b.id === editingBranch.id) {
-        return {
-          ...b,
-          name: formData.name,
-          code: formData.code,
-          address: formData.address,
-          phone: formData.phone,
-          email: formData.email,
-          manager: formData.manager,
-        };
-      }
-      return b;
-    }));
-
-    toast.success("Cabang berhasil diupdate");
-    setEditingBranch(null);
-    setFormData({ name: "", code: "", address: "", phone: "", email: "", manager: "" });
+  const handleSave = async () => {
+    if (!form.name.trim()) return;
+    await upsert.mutateAsync({
+      id: editing?.id,
+      name: form.name,
+      code: form.code || null,
+      address: form.address || null,
+      phone: form.phone || null,
+      manager: form.manager || null,
+      opening_hours: form.opening_hours || null,
+    });
+    setOpen(false);
   };
+
+  const toggleStatus = (b: Branch) => {
+    upsert.mutate({ id: b.id, name: b.name, status: b.status === "active" ? "inactive" : "active" } as any);
+  };
+
+  const active = branches.filter((b) => b.status === "active").length;
 
   return (
     <BackOfficeLayout>
-      <div className="space-y-4 md:space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="space-y-6">
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h1 className="text-xl md:text-2xl lg:text-3xl font-bold">Manajemen Cabang</h1>
-            <p className="text-muted-foreground text-sm md:text-base mt-1">Kelola semua cabang dan pantau performanya</p>
+            <h1 className="text-2xl md:text-3xl font-bold">Manajemen Cabang</h1>
+            <p className="text-sm text-muted-foreground mt-1">Kelola semua cabang. Perubahan tersimpan permanen.</p>
           </div>
-          <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-            <DialogTrigger asChild>
-              <Button className="gap-2 w-full sm:w-auto"><Plus className="w-4 h-4" />Tambah Cabang</Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[500px]">
-              <DialogHeader><DialogTitle>Tambah Cabang Baru</DialogTitle></DialogHeader>
-              <div className="grid gap-4 py-4">
-                <div className="grid gap-2">
-                  <Label>Nama Cabang *</Label>
-                  <Input 
-                    placeholder="Cabang Yogyakarta" 
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="grid gap-2">
-                    <Label>Kode *</Label>
-                    <Input 
-                      placeholder="YGY-01" 
-                      value={formData.code}
-                      onChange={(e) => setFormData({ ...formData, code: e.target.value })}
-                    />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label>Telepon</Label>
-                    <Input 
-                      placeholder="0274-555-1234" 
-                      value={formData.phone}
-                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    />
-                  </div>
-                </div>
-                <div className="grid gap-2">
-                  <Label>Alamat</Label>
-                  <Input 
-                    placeholder="Jl. Malioboro No. 100" 
-                    value={formData.address}
-                    onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label>Email</Label>
-                  <Input 
-                    type="email" 
-                    placeholder="yogyakarta@retailpro.id" 
-                    value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label>Manager</Label>
-                  <Input 
-                    placeholder="Nama Manager" 
-                    value={formData.manager}
-                    onChange={(e) => setFormData({ ...formData, manager: e.target.value })}
-                  />
-                </div>
-              </div>
-              <div className="flex gap-2">
-                <Button variant="outline" className="flex-1" onClick={() => setIsAddDialogOpen(false)}>Batal</Button>
-                <Button className="flex-1" onClick={handleAddBranch}>Simpan</Button>
-              </div>
-            </DialogContent>
-          </Dialog>
+          <Button className="gap-2" onClick={startNew}>
+            <Plus className="w-4 h-4" /> Tambah Cabang
+          </Button>
         </div>
 
-        {/* Edit Dialog */}
-        <Dialog open={!!editingBranch} onOpenChange={(open) => !open && setEditingBranch(null)}>
-          <DialogContent className="sm:max-w-[500px]">
-            <DialogHeader><DialogTitle>Edit Cabang</DialogTitle></DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="grid gap-2">
-                <Label>Nama Cabang *</Label>
-                <Input 
-                  placeholder="Cabang Yogyakarta" 
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="grid gap-2">
-                  <Label>Kode *</Label>
-                  <Input 
-                    placeholder="YGY-01" 
-                    value={formData.code}
-                    onChange={(e) => setFormData({ ...formData, code: e.target.value })}
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label>Telepon</Label>
-                  <Input 
-                    placeholder="0274-555-1234" 
-                    value={formData.phone}
-                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                  />
-                </div>
-              </div>
-              <div className="grid gap-2">
-                <Label>Alamat</Label>
-                <Input 
-                  placeholder="Jl. Malioboro No. 100" 
-                  value={formData.address}
-                  onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label>Email</Label>
-                <Input 
-                  type="email" 
-                  placeholder="yogyakarta@retailpro.id" 
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label>Manager</Label>
-                <Input 
-                  placeholder="Nama Manager" 
-                  value={formData.manager}
-                  onChange={(e) => setFormData({ ...formData, manager: e.target.value })}
-                />
-              </div>
-            </div>
-            <div className="flex gap-2">
-              <Button variant="outline" className="flex-1" onClick={() => setEditingBranch(null)}>Batal</Button>
-              <Button className="flex-1" onClick={handleSaveEdit}>Simpan</Button>
-            </div>
-          </DialogContent>
-        </Dialog>
-
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
-          <div className="bg-card rounded-xl border p-3 md:p-4">
-            <div className="flex items-center gap-2 md:gap-3">
-              <div className="p-2 md:p-2.5 rounded-lg bg-primary/10">
-                <Building2 className="w-4 h-4 md:w-5 md:h-5 text-primary" />
-              </div>
-              <div>
-                <p className="text-xs md:text-sm text-muted-foreground">Total Cabang</p>
-                <p className="text-xl md:text-2xl font-bold">{branches.length}</p>
-                <p className="text-xs text-success">{activeBranches} aktif</p>
-              </div>
-            </div>
-          </div>
-          <div className="bg-card rounded-xl border p-3 md:p-4">
-            <div className="flex items-center gap-2 md:gap-3">
-              <div className="p-2 md:p-2.5 rounded-lg bg-success/10">
-                <TrendingUp className="w-4 h-4 md:w-5 md:h-5 text-success" />
-              </div>
-              <div>
-                <p className="text-xs md:text-sm text-muted-foreground">Total Penjualan</p>
-                <p className="text-lg md:text-xl font-bold">{formatCurrency(totalSales)}</p>
-              </div>
-            </div>
-          </div>
-          <div className="bg-card rounded-xl border p-3 md:p-4">
-            <div className="flex items-center gap-2 md:gap-3">
-              <div className="p-2 md:p-2.5 rounded-lg bg-info/10">
-                <Users className="w-4 h-4 md:w-5 md:h-5 text-info" />
-              </div>
-              <div>
-                <p className="text-xs md:text-sm text-muted-foreground">Total Karyawan</p>
-                <p className="text-xl md:text-2xl font-bold">{totalEmployees}</p>
-              </div>
-            </div>
-          </div>
-          <div className="bg-card rounded-xl border p-3 md:p-4">
-            <div className="flex items-center gap-2 md:gap-3">
-              <div className="p-2 md:p-2.5 rounded-lg bg-warning/10">
-                <Package className="w-4 h-4 md:w-5 md:h-5 text-warning" />
-              </div>
-              <div>
-                <p className="text-xs md:text-sm text-muted-foreground">Total Produk</p>
-                <p className="text-xl md:text-2xl font-bold">{totalProducts.toLocaleString()}</p>
-              </div>
-            </div>
-          </div>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+          <Stat label="Total Cabang" value={branches.length} icon={Building2} />
+          <Stat label="Cabang Aktif" value={active} icon={MapPin} />
+          <Stat label="Nonaktif" value={branches.length - active} icon={X} />
         </div>
 
         <div className="bg-card rounded-xl border overflow-x-auto">
@@ -355,59 +99,52 @@ export default function Branches() {
               <TableRow>
                 <TableHead>Cabang</TableHead>
                 <TableHead className="hidden md:table-cell">Manager</TableHead>
-                <TableHead className="text-center">Karyawan</TableHead>
-                <TableHead className="text-center hidden sm:table-cell">Produk</TableHead>
-                <TableHead className="text-right hidden lg:table-cell">Penjualan</TableHead>
+                <TableHead className="hidden lg:table-cell">Alamat</TableHead>
                 <TableHead className="text-center">Status</TableHead>
-                <TableHead className="text-center w-24">Aksi</TableHead>
+                <TableHead className="text-right w-40">Aksi</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {branches.map((branch) => (
-                <TableRow key={branch.id} className="cursor-pointer hover:bg-muted/50" onClick={() => handleRowClick(branch)}>
+              {isLoading && <TableRow><TableCell colSpan={5} className="text-center py-8 text-muted-foreground">Memuat...</TableCell></TableRow>}
+              {!isLoading && branches.length === 0 && <TableRow><TableCell colSpan={5} className="text-center py-8 text-muted-foreground">Belum ada cabang. Tambahkan cabang pertama.</TableCell></TableRow>}
+              {branches.map((b) => (
+                <TableRow key={b.id}>
                   <TableCell>
-                    <div className="flex items-center gap-2 md:gap-3">
-                      <div className="w-8 h-8 md:w-10 md:h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                        <Building2 className="w-4 h-4 md:w-5 md:h-5 text-primary" />
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center">
+                        <Building2 className="w-4 h-4 text-primary" />
                       </div>
                       <div>
-                        <p className="font-medium text-sm md:text-base">{branch.name}</p>
-                        <p className="text-xs md:text-sm text-muted-foreground flex items-center gap-1">
-                          <MapPin className="w-3 h-3" />{branch.code}
+                        <p className="font-medium">{b.name}</p>
+                        <p className="text-xs text-muted-foreground flex items-center gap-1">
+                          <MapPin className="w-3 h-3" /> {b.code || "-"}
                         </p>
                       </div>
                     </div>
                   </TableCell>
                   <TableCell className="hidden md:table-cell">
-                    <p className="font-medium">{branch.manager}</p>
-                    <p className="text-sm text-muted-foreground flex items-center gap-1">
-                      <Phone className="w-3 h-3" />{branch.phone}
-                    </p>
+                    <p>{b.manager || "-"}</p>
+                    <p className="text-xs text-muted-foreground flex items-center gap-1"><Phone className="w-3 h-3" />{b.phone || "-"}</p>
                   </TableCell>
-                  <TableCell className="text-center font-semibold">{branch.employees}</TableCell>
-                  <TableCell className="text-center font-semibold hidden sm:table-cell">{branch.products.toLocaleString()}</TableCell>
-                  <TableCell className="text-right hidden lg:table-cell">
-                    <p className="font-semibold">{formatCurrency(branch.salesThisMonth)}</p>
-                    <p className="text-xs text-muted-foreground">{((branch.salesThisMonth / branch.salesTarget) * 100).toFixed(0)}% dari target</p>
-                  </TableCell>
+                  <TableCell className="hidden lg:table-cell text-sm text-muted-foreground">{b.address || "-"}</TableCell>
                   <TableCell className="text-center">
-                    <div className="flex items-center justify-center gap-2" onClick={(e) => e.stopPropagation()}>
-                      <Switch
-                        checked={branch.status === "active"}
-                        onCheckedChange={() => {}}
-                        onClick={(e) => handleToggleStatus(e, branch.id)}
-                      />
-                      <Badge 
-                        variant={branch.status === "active" ? "default" : "secondary"} 
-                        className={branch.status === "active" ? "bg-success/20 text-success hover:bg-success/30" : ""}
-                      >
-                        {branch.status === "active" ? "Aktif" : "Nonaktif"}
+                    <div className="flex items-center justify-center gap-2">
+                      <Switch checked={b.status === "active"} onCheckedChange={() => toggleStatus(b)} />
+                      <Badge variant={b.status === "active" ? "default" : "secondary"}>
+                        {b.status === "active" ? "Aktif" : "Nonaktif"}
                       </Badge>
                     </div>
                   </TableCell>
-                  <TableCell className="text-center">
-                    <Button variant="ghost" size="icon" onClick={(e) => handleEditBranch(e, branch)}>
+                  <TableCell className="text-right">
+                    <Button variant="ghost" size="icon" onClick={() => setAssignFor(b)} title="Kelola karyawan">
+                      <UserPlus className="w-4 h-4" />
+                    </Button>
+                    <Button variant="ghost" size="icon" onClick={() => startEdit(b)}>
                       <Edit className="w-4 h-4" />
+                    </Button>
+                    <Button variant="ghost" size="icon" className="text-destructive"
+                      onClick={() => { if (confirm(`Hapus cabang ${b.name}?`)) del.mutate(b.id); }}>
+                      <Trash2 className="w-4 h-4" />
                     </Button>
                   </TableCell>
                 </TableRow>
@@ -417,7 +154,94 @@ export default function Branches() {
         </div>
       </div>
 
-      <BranchDetailModal open={isDetailOpen} onOpenChange={setIsDetailOpen} branch={selectedBranch} />
+      {/* Add / Edit Dialog */}
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader><DialogTitle>{editing ? "Edit Cabang" : "Tambah Cabang"}</DialogTitle></DialogHeader>
+          <div className="grid gap-4 py-2">
+            <Field label="Nama Cabang *"><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></Field>
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="Kode"><Input value={form.code} onChange={(e) => setForm({ ...form, code: e.target.value })} /></Field>
+              <Field label="Telepon"><Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} /></Field>
+            </div>
+            <Field label="Alamat"><Input value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} /></Field>
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="Manager"><Input value={form.manager} onChange={(e) => setForm({ ...form, manager: e.target.value })} /></Field>
+              <Field label="Jam Operasional"><Input value={form.opening_hours} onChange={(e) => setForm({ ...form, opening_hours: e.target.value })} /></Field>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setOpen(false)}>Batal</Button>
+            <Button onClick={handleSave} disabled={upsert.isPending}>Simpan</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <AssignEmployeesDialog branch={assignFor} onClose={() => setAssignFor(null)} />
     </BackOfficeLayout>
+  );
+}
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return <div className="grid gap-1.5"><Label>{label}</Label>{children}</div>;
+}
+
+function Stat({ label, value, icon: Icon }: { label: string; value: number; icon: any }) {
+  return (
+    <div className="bg-card rounded-xl border p-4 flex items-center gap-3">
+      <div className="p-2.5 rounded-lg bg-primary/10"><Icon className="w-5 h-5 text-primary" /></div>
+      <div>
+        <p className="text-xs text-muted-foreground">{label}</p>
+        <p className="text-2xl font-bold">{value}</p>
+      </div>
+    </div>
+  );
+}
+
+function AssignEmployeesDialog({ branch, onClose }: { branch: Branch | null; onClose: () => void }) {
+  const { data: employees = [] } = useEmployees();
+  const { data: assigned = [] } = useBranchEmployees(branch?.id);
+  const assign = useAssignEmployee();
+  const unassign = useUnassignEmployee();
+  const [pickedId, setPickedId] = useState("");
+
+  if (!branch) return null;
+  const assignedIds = new Set(assigned.map((a: any) => a.employee_id));
+  const available = employees.filter((e) => !assignedIds.has(e.id));
+
+  return (
+    <Dialog open={!!branch} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2"><Users className="w-4 h-4" /> Karyawan {branch.name}</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-3">
+          <div className="flex gap-2">
+            <select className="flex-1 border rounded-md px-2 bg-background" value={pickedId} onChange={(e) => setPickedId(e.target.value)}>
+              <option value="">Pilih karyawan...</option>
+              {available.map((e) => <option key={e.id} value={e.id}>{e.full_name} {e.position ? `· ${e.position}` : ""}</option>)}
+            </select>
+            <Button disabled={!pickedId || assign.isPending} onClick={async () => {
+              await assign.mutateAsync({ branch_id: branch.id, employee_id: pickedId });
+              setPickedId("");
+            }}>Tugaskan</Button>
+          </div>
+          <div className="border rounded-lg divide-y">
+            {assigned.length === 0 && <div className="p-3 text-sm text-muted-foreground text-center">Belum ada karyawan ditugaskan</div>}
+            {assigned.map((a: any) => (
+              <div key={a.id} className="flex items-center justify-between p-2.5">
+                <div>
+                  <p className="font-medium text-sm">{a.employees?.full_name}</p>
+                  <p className="text-xs text-muted-foreground">{a.employees?.position || "-"}</p>
+                </div>
+                <Button variant="ghost" size="icon" className="text-destructive" onClick={() => unassign.mutate(a.id)}>
+                  <X className="w-4 h-4" />
+                </Button>
+              </div>
+            ))}
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
