@@ -81,7 +81,7 @@ const navItems: NavItem[] = [
 
 export function BackOfficeLayout({ children }: BackOfficeLayoutProps) {
   const [collapsed, setCollapsed] = useState(false);
-  const [expandedItems, setExpandedItems] = useState<string[]>(["Keuangan"]);
+  const [expandedItems, setExpandedItems] = useState<string[]>(["Keuangan", "Pembelian"]);
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
   const { theme, setTheme } = useTheme();
