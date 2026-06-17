@@ -7,6 +7,9 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
+  Tabs, TabsContent, TabsList, TabsTrigger,
+} from "@/components/ui/tabs";
+import {
   Table,
   TableBody,
   TableCell,
@@ -16,6 +19,8 @@ import {
 } from "@/components/ui/table";
 import { Building2, Mail, Phone, MapPin, CreditCard, FileText, Star } from "lucide-react";
 import type { Vendor } from "./VendorFormModal";
+import { VendorProductsTab } from "./VendorProductsTab";
+import { useVendorsDb } from "@/hooks/use-vendors-db";
 
 interface VendorDetailModalProps {
   open: boolean;
@@ -34,7 +39,11 @@ const mockRecentPOs = [
 ];
 
 export function VendorDetailModal({ open, onOpenChange, vendor }: VendorDetailModalProps) {
+  const { data: dbVendors = [] } = useVendorsDb();
   if (!vendor) return null;
+
+  // Try to find matching DB vendor by name to enable products tab
+  const dbVendor = dbVendors.find((v) => v.name.toLowerCase() === vendor.name.toLowerCase());
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -51,6 +60,12 @@ export function VendorDetailModal({ open, onOpenChange, vendor }: VendorDetailMo
           </DialogTitle>
         </DialogHeader>
 
+        <Tabs defaultValue="info" className="mt-2">
+          <TabsList>
+            <TabsTrigger value="info">Informasi</TabsTrigger>
+            <TabsTrigger value="products">Produk Vendor</TabsTrigger>
+          </TabsList>
+          <TabsContent value="info">
         <div className="space-y-6 py-4">
           {/* Status & Rating */}
           <div className="flex items-center gap-3 flex-wrap">
