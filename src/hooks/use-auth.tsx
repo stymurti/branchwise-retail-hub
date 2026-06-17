@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from "react";
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -10,12 +10,21 @@ interface Profile {
   full_name: string | null;
 }
 
+export interface BranchLite {
+  id: string;
+  name: string;
+  code: string | null;
+}
+
 interface AuthCtx {
   user: User | null;
   session: Session | null;
   profile: Profile | null;
   role: AppRole | null;
   loading: boolean;
+  availableBranches: BranchLite[];
+  activeBranch: BranchLite | null;
+  setActiveBranch: (b: BranchLite | null) => void;
   signIn: (username: string, password: string) => Promise<{ error?: string }>;
   signOut: () => Promise<void>;
 }
@@ -26,21 +35,61 @@ const USERNAME_DOMAIN = "retailpro.local";
 const toEmail = (u: string) =>
   u.includes("@") ? u : `${u.trim().toLowerCase().replace(/\s+/g, "")}@${USERNAME_DOMAIN}`;
 
+const ACTIVE_BRANCH_KEY = "retailpro-active-branch";
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [role, setRole] = useState<AppRole | null>(null);
+  const [availableBranches, setAvailable] = useState<BranchLite[]>([]);
+  const [activeBranch, setActiveBranchState] = useState<BranchLite | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const loadMeta = async (uid: string) => {
+  const setActiveBranch = useCallback((b: BranchLite | null) => {
+    setActiveBranchState(b);
+    if (b) localStorage.setItem(ACTIVE_BRANCH_KEY, JSON.stringify(b));
+    else localStorage.removeItem(ACTIVE_BRANCH_KEY);
+  }, []);
+
+  const loadMeta = useCallback(async (uid: string) => {
     const [{ data: p }, { data: r }] = await Promise.all([
       supabase.from("profiles").select("id, username, full_name").eq("id", uid).maybeSingle(),
       supabase.rpc("get_current_role"),
     ]);
     setProfile((p as Profile) ?? null);
-    setRole((r as AppRole) ?? null);
-  };
+    const _role = (r as AppRole) ?? null;
+    setRole(_role);
+
+    // Branches: if user is super_admin/admin → all branches; else look up via employees -> branch_employees
+    let branches: BranchLite[] = [];
+    if (_role === "super_admin" || _role === "admin") {
+      const { data } = await supabase.from("branches").select("id, name, code").eq("status", "active").order("name");
+      branches = (data as BranchLite[]) ?? [];
+    } else {
+      const { data: emp } = await supabase.from("employees").select("id").eq("user_id", uid).maybeSingle();
+      if (emp?.id) {
+        const { data: be } = await supabase
+          .from("branch_employees")
+          .select("branches(id, name, code)")
+          .eq("employee_id", emp.id);
+        branches = ((be ?? []).map((row: any) => row.branches).filter(Boolean)) as BranchLite[];
+      }
+    }
+    setAvailable(branches);
+
+    // Restore activeBranch from localStorage if still valid; otherwise auto-pick if only 1
+    const stored = localStorage.getItem(ACTIVE_BRANCH_KEY);
+    let chosen: BranchLite | null = null;
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored) as BranchLite;
+        if (branches.some((b) => b.id === parsed.id)) chosen = parsed;
+      } catch {}
+    }
+    if (!chosen && branches.length === 1) chosen = branches[0];
+    setActiveBranchState(chosen);
+  }, []);
 
   useEffect(() => {
     const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => {
@@ -51,6 +100,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } else {
         setProfile(null);
         setRole(null);
+        setAvailable([]);
+        setActiveBranchState(null);
       }
     });
 
@@ -62,7 +113,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
 
     return () => sub.subscription.unsubscribe();
-  }, []);
+  }, [loadMeta]);
 
   const signIn = async (username: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({
@@ -77,10 +128,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await supabase.auth.signOut();
     setProfile(null);
     setRole(null);
+    setActiveBranch(null);
   };
 
   return (
-    <Ctx.Provider value={{ user, session, profile, role, loading, signIn, signOut }}>
+    <Ctx.Provider value={{
+      user, session, profile, role, loading,
+      availableBranches, activeBranch, setActiveBranch,
+      signIn, signOut,
+    }}>
       {children}
     </Ctx.Provider>
   );
@@ -92,7 +148,6 @@ export function useAuth() {
   return c;
 }
 
-// Role helpers
 export const ROLE_LABELS: Record<AppRole, string> = {
   super_admin: "Super Admin",
   admin: "Admin",
