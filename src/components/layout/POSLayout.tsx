@@ -35,6 +35,16 @@ export function POSLayout({ children }: POSLayoutProps) {
             </div>
             <span className="font-bold text-lg">RetailPro</span>
             <span className="text-xs bg-primary/20 text-primary px-2 py-0.5 rounded-full">POS</span>
+            {activeBranch && (
+              <Badge variant="outline" className="gap-1 ml-1">
+                <Building2 className="w-3 h-3" /> {activeBranch.name}
+              </Badge>
+            )}
+            {availableBranches.length > 1 && (
+              <Button variant="ghost" size="sm" className="text-xs h-7" onClick={() => setActiveBranch(null)}>
+                Ganti Cabang
+              </Button>
+            )}
           </div>
           
           <nav className="hidden md:flex items-center gap-1 ml-6">
