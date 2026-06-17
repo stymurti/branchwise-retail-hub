@@ -60,7 +60,6 @@ const App = () => (
                 <ProtectedRoute allow={[...All]}><ModeSelect /></ProtectedRoute>
               } />
 
-              {/* POS Routes */}
               {/* POS Routes - wrapped in BranchGate */}
               <Route path="/pos" element={<ProtectedRoute allow={[...POSRoles]}><BranchGate><POS /></BranchGate></ProtectedRoute>} />
               <Route path="/pos/transactions" element={<ProtectedRoute allow={[...POSRoles]}><BranchGate><POSTransactions /></BranchGate></ProtectedRoute>} />
@@ -77,7 +76,6 @@ const App = () => (
               <Route path="/backoffice/inventory/stock-in" element={<ProtectedRoute allow={[...BO]}><Inventory /></ProtectedRoute>} />
               <Route path="/backoffice/inventory/opname" element={<ProtectedRoute allow={[...BO]}><Inventory /></ProtectedRoute>} />
               <Route path="/backoffice/inventory/po" element={<ProtectedRoute allow={[...BO]}><Inventory /></ProtectedRoute>} />
-              <Route path="/backoffice/vendors" element={<ProtectedRoute allow={[...AdminOnly]}><Vendors /></ProtectedRoute>} />
               <Route path="/backoffice/vendors" element={<ProtectedRoute allow={[...AdminOnly]}><Vendors /></ProtectedRoute>} />
               <Route path="/backoffice/purchasing/po" element={<ProtectedRoute allow={[...BO]}><PurchaseOrders /></ProtectedRoute>} />
               <Route path="/backoffice/purchasing/po/new" element={<ProtectedRoute allow={[...BO]}><NewPurchaseOrder /></ProtectedRoute>} />
