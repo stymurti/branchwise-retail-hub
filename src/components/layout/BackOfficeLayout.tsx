@@ -46,6 +46,15 @@ const navItems: NavItem[] = [
   { title: "Dashboard", icon: LayoutDashboard, path: "/backoffice" },
   { title: "Cabang", icon: Building2, path: "/backoffice/branches" },
   { title: "Inventory", icon: Package, path: "/backoffice/inventory/products" },
+  { title: "Vendor", icon: Truck, path: "/backoffice/vendors" },
+  {
+    title: "Pembelian",
+    icon: Warehouse,
+    children: [
+      { title: "Daftar PO", path: "/backoffice/purchasing/po", icon: FileText },
+      { title: "Buat PO Baru", path: "/backoffice/purchasing/po/new", icon: ArrowLeftRight },
+    ],
+  },
   {
     title: "Keuangan",
     icon: CreditCard,
