@@ -1,9 +1,11 @@
 import { ReactNode } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { ShoppingCart, FileText, Clock, LogOut, Store, Moon, Sun, Settings } from "lucide-react";
+import { ShoppingCart, FileText, Clock, LogOut, Store, Moon, Sun, Settings, Building2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { useTheme } from "@/hooks/use-theme";
+import { useAuth } from "@/hooks/use-auth";
 import { LiveChatWidget } from "@/components/chat/LiveChatWidget";
 
 interface POSLayoutProps {
@@ -20,6 +22,7 @@ const posNavItems = [
 export function POSLayout({ children }: POSLayoutProps) {
   const location = useLocation();
   const { theme, setTheme } = useTheme();
+  const { activeBranch, availableBranches, setActiveBranch } = useAuth();
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
