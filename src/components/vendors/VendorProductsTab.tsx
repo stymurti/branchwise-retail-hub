@@ -229,43 +229,87 @@ export function VendorProductsTab({ vendorId }: { vendorId: string }) {
         </div>
       </div>
 
-      <div className="border rounded-lg overflow-hidden">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Produk</TableHead>
-              <TableHead>SKU Vendor</TableHead>
-              <TableHead className="text-right">Harga Beli</TableHead>
-              <TableHead className="text-center">Lead Time</TableHead>
-              <TableHead className="w-10" />
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {isLoading && (
-              <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-6">Memuat...</TableCell></TableRow>
+      {(() => {
+        const subs = Array.from(
+          new Set(vps.map((v) => (v.products?.subcategory as string) || "Tanpa Sub-Kategori"))
+        ).sort();
+        const filtered = vps.filter((v) => {
+          if (subFilter === "all") return true;
+          const s = (v.products?.subcategory as string) || "Tanpa Sub-Kategori";
+          return s === subFilter;
+        });
+        const groups = filtered.reduce<Record<string, typeof vps>>((acc, v) => {
+          const s = (v.products?.subcategory as string) || "Tanpa Sub-Kategori";
+          (acc[s] ||= [] as any).push(v);
+          return acc;
+        }, {});
+        return (
+          <>
+            {vps.length > 0 && (
+              <div className="flex items-center gap-2">
+                <Label className="text-xs text-muted-foreground">Filter Sub-Kategori</Label>
+                <Select value={subFilter} onValueChange={setSubFilter}>
+                  <SelectTrigger className="h-8 w-56">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Semua ({vps.length})</SelectItem>
+                    {subs.map((s) => (
+                      <SelectItem key={s} value={s}>{s}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             )}
-            {!isLoading && vps.length === 0 && (
-              <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-6">Belum ada produk untuk vendor ini</TableCell></TableRow>
-            )}
-            {vps.map((vp) => (
-              <TableRow key={vp.id}>
-                <TableCell>
-                  <div className="font-medium">{vp.products?.name}</div>
-                  <div className="text-xs text-muted-foreground">{vp.products?.sku}</div>
-                </TableCell>
-                <TableCell className="text-xs font-mono">{vp.vendor_sku || "-"}</TableCell>
-                <TableCell className="text-right">{fmt(Number(vp.last_purchase_price) || 0)}</TableCell>
-                <TableCell className="text-center">{vp.lead_time_days ?? 0}d</TableCell>
-                <TableCell>
-                  <Button size="icon" variant="ghost" className="text-destructive" onClick={() => unlink.mutate(vp.id)}>
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
+            <div className="border rounded-lg overflow-hidden">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Produk</TableHead>
+                    <TableHead>SKU Vendor</TableHead>
+                    <TableHead className="text-right">Harga Beli</TableHead>
+                    <TableHead className="text-center">Lead Time</TableHead>
+                    <TableHead className="w-10" />
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {isLoading && (
+                    <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-6">Memuat...</TableCell></TableRow>
+                  )}
+                  {!isLoading && filtered.length === 0 && (
+                    <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-6">Belum ada produk untuk vendor ini</TableCell></TableRow>
+                  )}
+                  {Object.entries(groups).map(([sub, rows]) => (
+                    <>
+                      <TableRow key={`h-${sub}`} className="bg-muted/40 hover:bg-muted/40">
+                        <TableCell colSpan={5} className="py-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                          {sub} <span className="ml-1 text-[10px] font-normal">({rows.length})</span>
+                        </TableCell>
+                      </TableRow>
+                      {rows.map((vp) => (
+                        <TableRow key={vp.id}>
+                          <TableCell>
+                            <div className="font-medium">{vp.products?.name}</div>
+                            <div className="text-xs text-muted-foreground">{vp.products?.sku}</div>
+                          </TableCell>
+                          <TableCell className="text-xs font-mono">{vp.vendor_sku || "-"}</TableCell>
+                          <TableCell className="text-right">{fmt(Number(vp.last_purchase_price) || 0)}</TableCell>
+                          <TableCell className="text-center">{vp.lead_time_days ?? 0}d</TableCell>
+                          <TableCell>
+                            <Button size="icon" variant="ghost" className="text-destructive" onClick={() => unlink.mutate(vp.id)}>
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          </>
+        );
+      })()}
     </div>
   );
 }
