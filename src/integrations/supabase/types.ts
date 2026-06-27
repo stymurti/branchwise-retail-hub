@@ -211,6 +211,7 @@ export type Database = {
           sell_price: number | null
           sku: string | null
           status: string
+          subcategory: string | null
           unit: string | null
           updated_at: string
         }
@@ -226,6 +227,7 @@ export type Database = {
           sell_price?: number | null
           sku?: string | null
           status?: string
+          subcategory?: string | null
           unit?: string | null
           updated_at?: string
         }
@@ -241,6 +243,7 @@ export type Database = {
           sell_price?: number | null
           sku?: string | null
           status?: string
+          subcategory?: string | null
           unit?: string | null
           updated_at?: string
         }
