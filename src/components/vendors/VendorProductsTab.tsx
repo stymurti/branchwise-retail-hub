@@ -203,11 +203,12 @@ export function VendorProductsTab({ vendorId }: { vendorId: string }) {
                     />
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 gap-3">
                   <div>
                     <Label>Unit</Label>
                     <Input value={np.unit} onChange={(e) => setNp({ ...np, unit: e.target.value })} />
                   </div>
+                </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <Label>Harga Beli</Label>
