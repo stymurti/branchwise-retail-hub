@@ -92,6 +92,7 @@ export function VendorProductsTab({ vendorId }: { vendorId: string }) {
       sku: np.sku || null,
       barcode: np.barcode || null,
       category: np.category || null,
+      subcategory: np.subcategory || null,
       unit: np.unit,
       cost_price: Number(np.cost_price) || 0,
       sell_price: Number(np.sell_price) || 0,
@@ -102,7 +103,7 @@ export function VendorProductsTab({ vendorId }: { vendorId: string }) {
       last_purchase_price: Number(np.cost_price) || 0,
     });
     setNewOpen(false);
-    setNp({ name: "", sku: "", barcode: "", category: "", unit: "pcs", cost_price: "", sell_price: "" });
+    setNp({ name: "", sku: "", barcode: "", category: "", subcategory: "", unit: "pcs", cost_price: "", sell_price: "" });
   };
 
   return (
