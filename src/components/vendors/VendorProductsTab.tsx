@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -58,10 +58,13 @@ export function VendorProductsTab({ vendorId }: { vendorId: string }) {
     sku: "",
     barcode: "",
     category: "",
+    subcategory: "",
     unit: "pcs",
     cost_price: "",
     sell_price: "",
   });
+
+  const [subFilter, setSubFilter] = useState<string>("all");
 
   const linkedIds = new Set(vps.map((v) => v.product_id));
   const availableProducts = products.filter((p) => !linkedIds.has(p.id));
@@ -89,6 +92,7 @@ export function VendorProductsTab({ vendorId }: { vendorId: string }) {
       sku: np.sku || null,
       barcode: np.barcode || null,
       category: np.category || null,
+      subcategory: np.subcategory || null,
       unit: np.unit,
       cost_price: Number(np.cost_price) || 0,
       sell_price: Number(np.sell_price) || 0,
@@ -99,7 +103,7 @@ export function VendorProductsTab({ vendorId }: { vendorId: string }) {
       last_purchase_price: Number(np.cost_price) || 0,
     });
     setNewOpen(false);
-    setNp({ name: "", sku: "", barcode: "", category: "", unit: "pcs", cost_price: "", sell_price: "" });
+    setNp({ name: "", sku: "", barcode: "", category: "", subcategory: "", unit: "pcs", cost_price: "", sell_price: "" });
   };
 
   return (
@@ -191,6 +195,16 @@ export function VendorProductsTab({ vendorId }: { vendorId: string }) {
                     <Input value={np.category} onChange={(e) => setNp({ ...np, category: e.target.value })} />
                   </div>
                   <div>
+                    <Label>Sub-Kategori</Label>
+                    <Input
+                      value={np.subcategory}
+                      onChange={(e) => setNp({ ...np, subcategory: e.target.value })}
+                      placeholder="cth: Minuman Ringan"
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 gap-3">
+                  <div>
                     <Label>Unit</Label>
                     <Input value={np.unit} onChange={(e) => setNp({ ...np, unit: e.target.value })} />
                   </div>
@@ -215,43 +229,87 @@ export function VendorProductsTab({ vendorId }: { vendorId: string }) {
         </div>
       </div>
 
-      <div className="border rounded-lg overflow-hidden">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Produk</TableHead>
-              <TableHead>SKU Vendor</TableHead>
-              <TableHead className="text-right">Harga Beli</TableHead>
-              <TableHead className="text-center">Lead Time</TableHead>
-              <TableHead className="w-10" />
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {isLoading && (
-              <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-6">Memuat...</TableCell></TableRow>
+      {(() => {
+        const subs = Array.from(
+          new Set(vps.map((v) => (v.products?.subcategory as string) || "Tanpa Sub-Kategori"))
+        ).sort();
+        const filtered = vps.filter((v) => {
+          if (subFilter === "all") return true;
+          const s = (v.products?.subcategory as string) || "Tanpa Sub-Kategori";
+          return s === subFilter;
+        });
+        const groups = filtered.reduce<Record<string, typeof vps>>((acc, v) => {
+          const s = (v.products?.subcategory as string) || "Tanpa Sub-Kategori";
+          (acc[s] ||= [] as any).push(v);
+          return acc;
+        }, {});
+        return (
+          <>
+            {vps.length > 0 && (
+              <div className="flex items-center gap-2">
+                <Label className="text-xs text-muted-foreground">Filter Sub-Kategori</Label>
+                <Select value={subFilter} onValueChange={setSubFilter}>
+                  <SelectTrigger className="h-8 w-56">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Semua ({vps.length})</SelectItem>
+                    {subs.map((s) => (
+                      <SelectItem key={s} value={s}>{s}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             )}
-            {!isLoading && vps.length === 0 && (
-              <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-6">Belum ada produk untuk vendor ini</TableCell></TableRow>
-            )}
-            {vps.map((vp) => (
-              <TableRow key={vp.id}>
-                <TableCell>
-                  <div className="font-medium">{vp.products?.name}</div>
-                  <div className="text-xs text-muted-foreground">{vp.products?.sku}</div>
-                </TableCell>
-                <TableCell className="text-xs font-mono">{vp.vendor_sku || "-"}</TableCell>
-                <TableCell className="text-right">{fmt(Number(vp.last_purchase_price) || 0)}</TableCell>
-                <TableCell className="text-center">{vp.lead_time_days ?? 0}d</TableCell>
-                <TableCell>
-                  <Button size="icon" variant="ghost" className="text-destructive" onClick={() => unlink.mutate(vp.id)}>
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
+            <div className="border rounded-lg overflow-hidden">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Produk</TableHead>
+                    <TableHead>SKU Vendor</TableHead>
+                    <TableHead className="text-right">Harga Beli</TableHead>
+                    <TableHead className="text-center">Lead Time</TableHead>
+                    <TableHead className="w-10" />
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {isLoading && (
+                    <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-6">Memuat...</TableCell></TableRow>
+                  )}
+                  {!isLoading && filtered.length === 0 && (
+                    <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-6">Belum ada produk untuk vendor ini</TableCell></TableRow>
+                  )}
+                  {Object.entries(groups).map(([sub, rows]) => (
+                    <Fragment key={`g-${sub}`}>
+                      <TableRow className="bg-muted/40 hover:bg-muted/40">
+                        <TableCell colSpan={5} className="py-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                          {sub} <span className="ml-1 text-[10px] font-normal">({rows.length})</span>
+                        </TableCell>
+                      </TableRow>
+                      {rows.map((vp) => (
+                        <TableRow key={vp.id}>
+                          <TableCell>
+                            <div className="font-medium">{vp.products?.name}</div>
+                            <div className="text-xs text-muted-foreground">{vp.products?.sku}</div>
+                          </TableCell>
+                          <TableCell className="text-xs font-mono">{vp.vendor_sku || "-"}</TableCell>
+                          <TableCell className="text-right">{fmt(Number(vp.last_purchase_price) || 0)}</TableCell>
+                          <TableCell className="text-center">{vp.lead_time_days ?? 0}d</TableCell>
+                          <TableCell>
+                            <Button size="icon" variant="ghost" className="text-destructive" onClick={() => unlink.mutate(vp.id)}>
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </Fragment>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          </>
+        );
+      })()}
     </div>
   );
 }

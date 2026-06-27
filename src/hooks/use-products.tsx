@@ -8,6 +8,7 @@ export type Product = {
   barcode: string | null;
   name: string;
   category: string | null;
+  subcategory: string | null;
   unit: string | null;
   cost_price: number;
   sell_price: number;
