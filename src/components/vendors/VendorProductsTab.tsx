@@ -58,10 +58,13 @@ export function VendorProductsTab({ vendorId }: { vendorId: string }) {
     sku: "",
     barcode: "",
     category: "",
+    subcategory: "",
     unit: "pcs",
     cost_price: "",
     sell_price: "",
   });
+
+  const [subFilter, setSubFilter] = useState<string>("all");
 
   const linkedIds = new Set(vps.map((v) => v.product_id));
   const availableProducts = products.filter((p) => !linkedIds.has(p.id));
