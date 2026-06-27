@@ -280,8 +280,8 @@ export function VendorProductsTab({ vendorId }: { vendorId: string }) {
                     <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-6">Belum ada produk untuk vendor ini</TableCell></TableRow>
                   )}
                   {Object.entries(groups).map(([sub, rows]) => (
-                    <>
-                      <TableRow key={`h-${sub}`} className="bg-muted/40 hover:bg-muted/40">
+                    <Fragment key={`g-${sub}`}>
+                      <TableRow className="bg-muted/40 hover:bg-muted/40">
                         <TableCell colSpan={5} className="py-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                           {sub} <span className="ml-1 text-[10px] font-normal">({rows.length})</span>
                         </TableCell>
@@ -302,7 +302,7 @@ export function VendorProductsTab({ vendorId }: { vendorId: string }) {
                           </TableCell>
                         </TableRow>
                       ))}
-                    </>
+                    </Fragment>
                   ))}
                 </TableBody>
               </Table>
